@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .terminal {
+            border: 1px solid white;
+            width: calc(100% - 80px);
+            height: calc(100% - 80px);
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        .terminal-output {
+    margin-top: -30px; /* Distance between the highest text and the border */
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="terminal" id="terminal-wrapper"></div>
+
+    <script>
+        var symptom_weights = {
+    "shortness of breath": 1,
+    "cough": 1,
+    "wheezing": 2,
+    "chest tightness": 2,
+    "fatigue": 1,
+    "sputum production": 1,
+    "abnormal breath sounds": 1,
+    "abnormal pulmonary function test": 2,
+    "increased mucus production": 1,
+    "chest discomfort": 1,
+    "fever": 2,
+    "cyanosis": 3,
+    "clubbing of fingers": 2,
+    "hemoptysis": 2,
+    "weight loss": 1,
+    "abnormal chest x-ray": 2,
+    "night sweats": 1,
+    "loss of appetite": 1,
+    "dizziness": 1,
+    "fast heart rate": 1,
+    "leg swelling": 2,
+    "anxiety": 1,
+    "sweating": 1,
+    "skin rash": 2,
+    "joint pain": 2,
+    "swollen lymph nodes": 1,
+    "enlarged spleen": 1,
+    "eye redness": 1,
+    "reduced chest expansion": 1,
+    "decreased breath sounds": 1,
+    "hypoxia": 2,
+    "pink frothy sputum": 2,
+    "chest palpitations": 1,
+    "rapid breathing": 1,
+    "confusion": 1,
+    "low blood pressure": 1,
+    "failure to thrive": 1,
+    "low blood oxygen": 2,
+    "abdominal pain": 1,
+    "enlarged abdomen": 1,
+    "chest pain": 2,
+    "swelling in ankles and legs": 2,
+    "fainting": 1
+};
+
+var all_symptoms = [
+            "shortness of breath", "cough", "wheezing", "chest tightness", "fatigue",
+            "sputum production", "abnormal breath sounds", "abnormal pulmonary function test",
+            "increased mucus production", "chest discomfort", "fever", "cyanosis",
+            "clubbing of fingers", "hemoptysis", "weight loss", "abnormal chest x-ray",
+            "night sweats", "loss of appetite", "dizziness", "fast heart rate",
+            "leg swelling", "anxiety", "sweating", "skin rash", "joint pain",
+            "swollen lymph nodes", "enlarged spleen", "eye redness", "reduced chest expansion",
+            "decreased breath sounds", "hypoxia", "pink frothy sputum", "chest palpitations",
+            "rapid breathing", "confusion", "low blood pressure", "failure to thrive",
+            "low blood oxygen", "abdominal pain", "enlarged abdomen"
+        ];
+
+        class Character {
+            constructor(name, symptoms) {
+                this.name = name;
+                this.symptoms = symptoms;
+            }
+        }
+
+        var characters = [
+            new Character("Asthma", ["shortness of breath", "cough", "wheezing", "chest tightness", "fatigue", "sputum production", "abnormal breath sounds", "abnormal pulmonary function test"]),
+            new Character("Chronic Bronchitis", ["cough", "increased mucus production", "chest discomfort", "fever", "shortness of breath", "wheezing", "cyanosis", "clubbing of fingers", "hemoptysis", "weight loss", "abnormal breath sounds", "abnormal chest x-ray", "abnormal pulmonary function test", "chest tightness", "night sweats", "loss of appetite"]),
+            new Character("Emphysema", ["shortness of breath", "cough", "wheezing", "chest tightness", "fatigue", "sputum production", "abnormal breath sounds", "abnormal pulmonary function test"]),
+            new Character("Pneumonia", ["shortness of breath", "cough", "chest pain", "fever", "fatigue", "sputum production", "cyanosis", "clubbing of fingers", "hemoptysis", "weight loss", "abnormal breath sounds", "abnormal chest x-ray", "abnormal pulmonary function test", "chest tightness", "night sweats", "loss of appetite"]),
+            new Character("Tuberculosis", ["shortness of breath", "cough", "fever", "fatigue", "sputum production", "cyanosis", "clubbing of fingers", "hemoptysis", "weight loss", "abnormal breath sounds", "abnormal chest x-ray", "abnormal pulmonary function test", "loss of appetite"]),
+            new Character("Lung Cancer", ["shortness of breath", "cough", "chest pain", "fatigue", "sputum production", "clubbing of fingers", "hemoptysis", "weight loss", "abnormal breath sounds", "abnormal chest x-ray", "abnormal pulmonary function test", "loss of appetite"]),
+            new Character("Pulmonary Hypertension", ["shortness of breath", "chest pain", "fatigue", "cyanosis", "abnormal breath sounds", "abnormal chest x-ray"]),
+            new Character("Pulmonary Fibrosis", ["shortness of breath", "cough", "chest pain", "fatigue", "sputum production", "cyanosis", "clubbing of fingers", "hemoptysis", "weight loss", "abnormal breath sounds", "abnormal chest x-ray", "abnormal pulmonary function test", "loss of appetite"]),
+            new Character("Bronchiectasis", ["cough", "increased mucus production", "chest discomfort", "shortness of breath", "wheezing", "hemoptysis", "abnormal breath sounds", "loss of appetite"]),
+            new Character("Pleural Effusion", ["shortness of breath", "chest pain", "fever", "fatigue", "cyanosis", "abnormal breath sounds", "chest tightness", "night sweats", "loss of appetite"]),
+            new Character("Pulmonary Embolism", ["shortness of breath", "cough", "chest pain", "fever", "cyanosis", "hemoptysis", "dizziness", "fast heart rate", "leg swelling", "chest tightness", "anxiety", "sweating"]),
+            new Character("Sarcoidosis", ["cough", "fever", "fatigue", "weight loss", "skin rash", "joint pain", "swollen lymph nodes", "enlarged spleen", "eye redness", "abnormal breath sounds", "abnormal chest x-ray", "loss of appetite"]),
+            new Character("COPD (Chronic Obstructive Pulmonary Disease)", ["shortness of breath", "cough", "wheezing", "chest tightness", "fatigue", "sputum production", "abnormal breath sounds", "abnormal pulmonary function test"]),
+            new Character("Interstitial Lung Disease", ["shortness of breath", "cough", "chest pain", "fatigue", "sputum production", "cyanosis", "clubbing of fingers", "weight loss", "abnormal breath sounds", "abnormal chest x-ray", "abnormal pulmonary function test"]),
+            new Character("Atelectasis", ["shortness of breath", "cough", "chest pain", "fever", "cyanosis", "decreased breath sounds", "reduced chest expansion", "hypoxia"]),
+            new Character("Pulmonary Edema", ["shortness of breath", "cough", "chest pain", "wheezing", "fatigue", "pink frothy sputum", "rapid breathing", "anxiety", "leg swelling", "hypoxia"]),
+            new Character("Pleural Mesothelioma", ["shortness of breath", "cough", "chest pain", "fever", "fatigue", "sputum production", "weight loss", "cyanosis", "clubbing of fingers", "hemoptysis", "loss of appetite"]),
+            new Character("Respiratory Distress Syndrome (ARDS)", ["shortness of breath", "cough", "chest pain", "fever", "rapid breathing", "hypoxia", "low blood pressure", "confusion", "fatigue"]),
+            new Character("Pulmonary Alveolar Proteinosis", ["shortness of breath", "cough", "fever", "fatigue", "weight loss", "cyanosis", "chest pain", "wheezing", "night sweats"]),
+            new Character("Pulmonary Hypoplasia", ["shortness of breath", "cough", "rapid breathing", "cyanosis", "wheezing", "fatigue", "failure to thrive", "low blood oxygen"]),
+            new Character("Pulmonary Sarcoidosis", ["cough", "fever", "fatigue", "weight loss", "skin rash", "joint pain", "swollen lymph nodes", "enlarged spleen", "eye redness", "abnormal breath sounds", "abnormal chest x-ray", "loss of appetite"]),
+            new Character("Pulmonary Lymphangioleiomyomatosis (LAM)", ["shortness of breath", "cough", "chest pain", "fatigue", "wheezing", "cyanosis", "abnormal breath sounds", "abnormal chest x-ray", "hemoptysis", "loss of appetite"]),
+            new Character("Pulmonary Arterial Hypertension (PAH)", ["shortness of breath", "chest pain", "fatigue", "cyanosis", "abnormal breath sounds", "abnormal chest x-ray", "swelling in ankles and legs", "dizziness", "fainting", "chest palpitations"]),
+            new Character("Pulmonary Alveolar Microlithiasis", ["shortness of breath", "cough", "chest pain", "fatigue", "cyanosis", "abnormal breath sounds", "abnormal chest x-ray", "chest tightness", "hemoptysis", "loss of appetite"]),
+            new Character("Pulmonary Sequestration", ["shortness of breath", "cough", "chest pain", "cyanosis", "hemoptysis", "fever", "wheezing", "abnormal chest x-ray", "abdominal pain", "enlarged abdomen"]),
+            new Character("Pulmonary Hypertension Due to Left Heart Disease", ["shortness of breath", "cough", "chest pain", "fatigue", "cyanosis", "abnormal breath sounds", "abnormal chest x-ray", "swelling in ankles and legs", "dizziness", "fainting"]),
+            new Character("Pulmonary Hypertension Due to Lung Disease", ["shortness of breath", "cough", "chest pain", "fatigue", "cyanosis", "abnormal breath sounds", "abnormal chest x-ray", "swelling in ankles and legs", "dizziness", "fainting"]),
+            new Character("Pulmonary Hypertension Due to Chronic Blood Clots", ["shortness of breath", "cough", "chest pain", "fatigue", "cyanosis", "abnormal breath sounds", "abnormal chest x-ray", "swelling in ankles and legs", "dizziness", "fainting"]),
+            new Character("No Illness", [])
+        ];
+
+        var currentSymptomIndex = 0;
+        var userSymptoms = [];
+        var isEndSequence = false;
+        var awaitingContinuationResponse = false;
+
+        function calculate_similarity(user_traits, illness_traits) {
+    if (illness_traits.length === 0 && user_traits.length === 0) {
+        return 1; // Maximum similarity for "No Illness" when the user has no symptoms
+    }
+    var intersection = user_traits.reduce(function(acc, symptom) {
+        if (illness_traits.includes(symptom)) {
+            return acc + symptom_weights[symptom];
+        }
+        return acc;
+    }, 0);
+
+    var user_weight_sum = user_traits.reduce(function(acc, symptom) {
+        return acc + symptom_weights[symptom];
+    }, 0);
+
+    var illness_weight_sum = illness_traits.reduce(function(acc, symptom) {
+        return acc + symptom_weights[symptom];
+    }, 0);
+
+    return intersection / (user_weight_sum + illness_weight_sum - intersection);
+}
+
+        function askNextSymptom(term) {
+            if (currentSymptomIndex < all_symptoms.length) {
+                term.echo("Are you experiencing " + all_symptoms[currentSymptomIndex] + "?");
+            } else {
+                determineIllness(term);
+            }
+        }
+
+        function determineIllness(term) {
+            var maxSimilarity = -1;
+            var bestMatch = null;
+
+            characters.forEach(function(character) {
+                var similarity = calculate_similarity(userSymptoms, character.symptoms);
+                if (similarity > maxSimilarity) {
+                    maxSimilarity = similarity;
+                    bestMatch = character.name;
+                }
+            });
+
+            if (bestMatch) {
+                term.echo("[[;#00A0E4;]Based on your symptoms, I diagnose you with " + bestMatch + "]");
+            } else {
+                term.echo("[[;#00A0E4;]We couldn't determine a specific illness based on your symptoms. Please consult with a healthcare professional.");
+            }
+
+            term.echo("Do you want to start over? (yes/no)");
+            isEndSequence = true;
+        }
+
+        $(document).ready(function() {
+            $('#terminal-wrapper').terminal(function(command, term) {
+                if (isEndSequence) {
+                    if (command.toLowerCase() === 'yes') {
+                        currentSymptomIndex = 0;
+                        userSymptoms = [];
+                        isEndSequence = false;
+                        term.clear();
+                        term.echo('                                                                                      \n'+
+'ooo        ooooo oooooooooooo oooooooooo.   ooooooooooooo   .oooooo.   ooooooooo.   \n'+
+'\`88.       .888\' \`888\'     \`8 \`888\'   \`Y8b  8\'   888   \`8  d8P\'  \`Y8b  \`888   \`Y88. \n'+
+' 888b     d\'888   888          888      888      888      888      888  888   .d88\' \n'+
+' 8 Y88. .P  888   888oooo8     888      888      888      888      888  888ooo88P\'  \n'+
+' 8  \`888\'   888   888    "     888      888      888      888      888  888\`88b.    \n'+
+' 8    Y     888   888       o  888     d88\'      888      \`88b    d88\'  888  \`88b.  \n'+
+'o8o        o888o o888ooooood8 o888bood8P\'       o888o      \`Y8bood8P\'  o888o  o888o \n'+
+'                                                                                       \n'+
+'[[;lime;]Welcome to MEDTOR!]\nI will diagnose your illness based on your symptoms.\nPlease answer with \'yes\' or \'no\' to the following questions.\n');
+
+                        askNextSymptom(term);
+                    } else if (command.toLowerCase() === 'no') {
+                        term.echo("[[;#00A0E4;]Alright. Have a wonderful day and be sure to follow up with a medical professional!");
+                        term.disable();
+                    } else {
+                        term.echo("Please answer with 'yes' or 'no'.");
+                    }
+                } else if (awaitingContinuationResponse) {
+                    if (command.toLowerCase() === 'yes') {
+                        awaitingContinuationResponse = false;
+                        askNextSymptom(term);
+                    } else if (command.toLowerCase() === 'no') {
+                        awaitingContinuationResponse = false;
+                        determineIllness(term);
+                    } else {
+                        term.echo("Please answer with 'yes' or 'no'.");
+                    }
+                } else if (command.toLowerCase() === 'yes' || command.toLowerCase() === 'no') {
+                    if (command.toLowerCase() === 'yes') {
+                        userSymptoms.push(all_symptoms[currentSymptomIndex]);
+                    }
+
+                    currentSymptomIndex++;
+
+                    if (currentSymptomIndex % 5 === 0) {
+                        term.echo("[[;#00A0E4;]Do you wish to report more symptoms? (yes/no)");
+                        awaitingContinuationResponse = true;
+                    } else {
+                        askNextSymptom(term);
+                    }
+                } else {
+                    term.echo("Please answer with 'yes' or 'no'.");
+                }
+            }, {
+                greetings: `
+ooo        ooooo oooooooooooo oooooooooo.   ooooooooooooo   .oooooo.   ooooooooo.   
+\`88.       .888' \`888'     \`8 \`888'   \`Y8b  8'   888   \`8  d8P'  \`Y8b  \`888   \`Y88. 
+ 888b     d'888   888          888      888      888      888      888  888   .d88' 
+ 8 Y88. .P  888   888oooo8     888      888      888      888      888  888ooo88P'  
+ 8  \`888'   888   888    "     888      888      888      888      888  888\`88b.    
+ 8    Y     888   888       o  888     d88'      888      \`88b    d88'  888  \`88b.  
+o8o        o888o o888ooooood8 o888bood8P'       o888o      \`Y8bood8P'  o888o  o888o 
+                                                                                                                                                                     
+[[;lime;]Welcome to MEDTOR!]\nI will diagnose your illness based on your symptoms.\nPlease answer with 'yes' or 'no' to the following questions.
+`,
+                prompt: '> ',
+                onInit: function(term) {
+                    askNextSymptom(term);
+                }
+            });
+        });
+    </script>
+    
+</body>
+
+</html>
