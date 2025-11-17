@@ -1,186 +1,2204 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal</title>
+    <title>Live Patient Monitoring Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: white;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding: 20px 28px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .facility-name {
+            font-size: 0.85em;
+            color: #8b949e;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            font-weight: 400;
+            margin: 0;
+            color: #e6edf3;
+            letter-spacing: 0.5px;
+            font-family: 'Courier New', Courier, 'Lucida Console', Monaco, 'Consolas', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            font-size: 0.85em;
+            color: #8b949e;
+            font-weight: 400;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .system-info {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 0.8em;
+            color: #6e7681;
+            font-family: 'Courier New', 'Consolas', monospace;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+            box-shadow: 0 0 6px rgba(63, 185, 80, 0.6);
+        }
+
+        .timestamp {
+            font-size: 0.9em;
+            color: #8b949e;
+            font-family: 'Courier New', 'Consolas', monospace;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding: 12px 28px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75em;
+            color: #6e7681;
+            font-family: 'Courier New', 'Consolas', monospace;
+        }
+
+        .footer-left {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-right {
+            display: flex;
+            gap: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .patient-module {
+            background: #161b22;
+            border-radius: 6px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            border: 1px solid #30363d;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .patient-module:hover {
+            border-color: #58a6ff;
+            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.15);
+        }
+
+        .patient-module {
+            transform-origin: center center;
+        }
+
+        .patient-module.expanded {
+            position: fixed !important;
+            z-index: 1000;
+            border-color: #58a6ff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(88, 166, 255, 0.3);
+            overflow-y: auto;
+            overflow-x: hidden;
+            cursor: default;
+            max-height: 90vh;
+        }
+
+        .overlay-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+        }
+
+        .overlay-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .minimize-button {
+            display: none;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            color: #e6edf3;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .patient-module.expanded .minimize-button {
+            display: flex;
+        }
+
+        .minimize-button:hover {
+            background: #30363d;
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        .expanded-content {
+            display: none;
+        }
+
+        .patient-module.expanded .expanded-content {
+            display: block;
+            margin-top: 20px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            border-top: 1px solid #21262d;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .patient-module.expanded .expanded-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .patient-module.expanded .expanded-content::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        
+        .patient-module.expanded .expanded-content::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px;
+        }
+        
+        .patient-module.expanded .expanded-content::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        .waveform-container {
+            margin-bottom: 20px;
+        }
+
+        .waveform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .waveform-label {
+            font-size: 0.75em;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .waveform-value {
+            font-size: 0.9em;
+            color: #e6edf3;
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-weight: 600;
+        }
+
+        .waveform-canvas {
+            width: 100%;
+            height: 80px;
+            background: #0d1117;
+            border: 1px solid #21262d;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .patient-info-section {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #21262d;
+            margin-bottom: 20px;
+        }
+
+        .patient-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            font-size: 0.75em;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-label {
+            color: #6e7681;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .info-value {
+            color: #e6edf3;
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-weight: 500;
+        }
+
+        .additional-vitals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .additional-vital {
+            background: #0d1117;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #21262d;
+        }
+
+        .additional-vital-label {
+            font-size: 0.65em;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .additional-vital-value {
+            font-size: 1.2em;
+            color: #e6edf3;
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-weight: 600;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .patient-module.expanded .module-header {
+            padding-right: 40px;
+        }
+
+        .module-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .room-number {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #58a6ff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .patient-name-display {
+            font-size: 0.75em;
+            font-weight: 400;
+            color: #e6edf3;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .procedure-info {
+            font-size: 0.7em;
+            color: #6e7681;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+        }
+
+        .patient-id {
+            font-size: 0.75em;
+            color: #7c3aed;
+            background: rgba(124, 58, 237, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-weight: 500;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            font-family: 'Courier New', 'Consolas', monospace;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .patient-id:hover {
+            background: rgba(124, 58, 237, 0.2);
+        }
+
+        .patient-file-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            overflow-y: auto;
+        }
+
+        .patient-file-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .patient-file-content {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .patient-file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .patient-file-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #e6edf3;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .close-file-button {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            color: #e6edf3;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .close-file-button:hover {
+            background: #30363d;
+        }
+
+        .patient-file-section {
+            margin-bottom: 24px;
+        }
+
+        .file-section-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #58a6ff;
+            margin-bottom: 12px;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .file-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .file-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .file-info-label {
+            font-size: 0.75em;
+            color: #6e7681;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .file-info-value {
+            font-size: 0.9em;
+            color: #e6edf3;
+            font-family: 'Courier New', 'Consolas', monospace;
+        }
+
+        .file-notes {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+
+        .file-note {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .file-note:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .file-note-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .file-note-author {
+            font-size: 0.85em;
+            color: #58a6ff;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .file-note-date {
+            font-size: 0.75em;
+            color: #6e7681;
+            font-family: 'Courier New', 'Consolas', monospace;
+        }
+
+        .file-note-text {
+            font-size: 0.9em;
+            color: #e6edf3;
+            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .module-meta {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            gap: 3px;
+            font-size: 0.65em;
+            color: #6e7681;
+            font-family: 'Courier New', 'Consolas', monospace;
+            margin-left: auto;
         }
 
-        h1 {
-            margin-bottom: 10px;
-        }
-
-        #calendar {
+        .vitals-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            max-width: 600px;
-        }
-
-        .day {
-            background: #222;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 5px;
-            user-select: none;
-        }
-
-        .green {
-            background-color: green;
-        }
-
-        .red {
-            background-color: red;
-        }
-
-        .blank {
-            background-color: #333;
-        }
-
-        #monthYear {
-            margin: 10px 0;
-        }
-
-        button {
-            margin: 0 10px;
-            padding: 5px 10px;
-        }
-
-        #modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #222;
-            padding: 20px;
-            border: 1px solid white;
-            display: none;
-            flex-direction: column;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
 
-        #modal input {
-            padding: 5px;
+        .vital {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 3px solid;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            word-wrap: break-word;
+            border-top: 1px solid #21262d;
+            border-right: 1px solid #21262d;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .vital.normal {
+            border-left-color: #3fb950;
+        }
+
+        .vital.warning {
+            border-left-color: #d29922;
+            animation: pulse 2s infinite;
+        }
+
+        .vital.critical {
+            border-left-color: #f85149;
+            animation: criticalPulse 0.8s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes criticalPulse {
+            0%, 100% { 
+                background: rgba(248, 81, 73, 0.05);
+                border-left-width: 3px;
+            }
+            50% { 
+                background: rgba(248, 81, 73, 0.12);
+                border-left-width: 5px;
+            }
+        }
+
+        .vital-label {
+            font-size: 0.7em;
+            color: #8b949e;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .vital-value {
+            font-size: 1.6em;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.2;
+            word-wrap: break-word;
+            font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .vital-unit {
+            font-size: 0.65em;
+            color: #8b949e;
+            margin-left: 4px;
+            font-weight: 400;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .vital-status {
+            font-size: 0.65em;
+            margin-top: 6px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-normal {
+            background: rgba(63, 185, 80, 0.15);
+            color: #3fb950;
+            border: 1px solid rgba(63, 185, 80, 0.3);
+        }
+
+        .status-warning {
+            background: rgba(210, 153, 34, 0.15);
+            color: #d29922;
+            border: 1px solid rgba(210, 153, 34, 0.3);
+        }
+
+        .status-critical {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .hr .vital-value { color: #58a6ff; }
+        .spo2 .vital-value { color: #3fb950; }
+        .bp .vital-value { color: #f59e0b; }
+        .etco2 .vital-value { color: #a855f7; }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .patient-module:hover {
+                transform: none;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+                border-color: #30363d;
+            }
+
+            .patient-module.expanded {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .waveform-canvas {
+                height: 60px;
+            }
+
+            .additional-vitals {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px 12px;
+                margin-bottom: 15px;
+                gap: 12px;
+            }
+
+            .header-left {
+                align-items: center;
+                width: 100%;
+            }
+
+            .facility-name {
+                font-size: 0.7em;
+                line-height: 1.4;
+                margin-bottom: 4px;
+            }
+
+            .header h1 {
+                font-size: 1.3em;
+                margin: 0;
+                line-height: 1.2;
+            }
+
+            .header-right {
+                align-items: center;
+                width: 100%;
+                gap: 10px;
+            }
+
+            .system-info {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                width: 100%;
+                font-size: 0.7em;
+            }
+
+            .system-info > span {
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .system-status {
+                justify-content: center;
+            }
+
+            .timestamp {
+                font-size: 0.75em;
+                text-align: center;
+                width: 100%;
+                margin-top: 4px;
+            }
+
+            .procedure-info {
+                font-size: 0.65em;
+            }
+
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+                padding: 12px 16px;
+            }
+
+            .footer-left,
+            .footer-right {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .patient-module {
+                padding: 10px;
+                border-radius: 8px;
+            }
+
+            .module-header {
+                margin-bottom: 8px;
+                padding-bottom: 8px;
+            }
+
+            .room-number {
+                font-size: 1em;
+            }
+
+            .patient-id {
+                font-size: 0.65em;
+                padding: 3px 6px;
+            }
+
+            .vitals-grid {
+                gap: 8px;
+            }
+
+            .vital {
+                padding: 8px;
+            }
+
+            .vital-label {
+                font-size: 0.6em;
+                margin-bottom: 4px;
+            }
+
+            .vital-value {
+                font-size: 1.1em;
+                margin-bottom: 2px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+
+            .vital-unit {
+                font-size: 0.6em;
+                margin-left: 0;
+                margin-top: 2px;
+            }
+
+            .vital-status {
+                font-size: 0.55em;
+                margin-top: 2px;
+                padding: 2px 5px;
+            }
+        }
+
+        /* Small Mobile Devices */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .header {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .header {
+                padding: 12px 10px;
+                gap: 10px;
+            }
+
+            .header-left {
+                margin-bottom: 4px;
+            }
+
+            .facility-name {
+                font-size: 0.65em;
+            }
+
+            .header h1 {
+                font-size: 1.15em;
+                margin-bottom: 0;
+            }
+
+            .header-right {
+                font-size: 0.7em;
+                gap: 8px;
+            }
+
+            .system-info {
+                font-size: 0.65em;
+                gap: 8px;
+            }
+
+            .timestamp {
+                font-size: 0.7em;
+            }
+
+            .dashboard {
+                gap: 8px;
+            }
+
+            .patient-module {
+                padding: 8px;
+            }
+
+            .module-header {
+                margin-bottom: 6px;
+                padding-bottom: 6px;
+            }
+
+            .room-number {
+                font-size: 0.9em;
+            }
+
+            .patient-id {
+                font-size: 0.6em;
+                padding: 2px 5px;
+            }
+
+            .vitals-grid {
+                gap: 6px;
+            }
+
+            .vital {
+                padding: 6px;
+            }
+
+            .vital-label {
+                font-size: 0.55em;
+                margin-bottom: 3px;
+            }
+
+            .vital-value {
+                font-size: 1em;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+
+            .vital-unit {
+                font-size: 0.55em;
+                margin-left: 0;
+                margin-top: 2px;
+            }
+
+            .vital-status {
+                font-size: 0.5em;
+                padding: 1px 4px;
+            }
         }
     </style>
 </head>
-
 <body>
-    <h1>Trading Journal</h1>
-    <div id="monthYear"></div>
-    <div>
-        <button onclick="prevMonth()">Previous</button>
-        <button onclick="nextMonth()">Next</button>
+    <div class="header">
+        <div class="header-left">
+            <div class="facility-name">DIGNITY HEALTH ST. JOSEPH'S HOSPITAL AND MEDICAL CENTER | SURGICAL SERVICES</div>
+            <h1>VITALSYNC OR MONITORING</h1>
+        </div>
+        <div class="header-right">
+            <div class="system-info">
+                <div class="system-status">
+                    <div class="status-indicator"></div>
+                    <span>SYSTEM ONLINE</span>
+                </div>
+                <span>|</span>
+                <span>OR COUNT: <span id="or-count">12</span></span>
+                <span>|</span>
+                <span>NET: CONNECTED</span>
+            </div>
+        <div class="timestamp" id="timestamp"></div>
+        </div>
     </div>
-    <div id="calendar"></div>
 
-    <div id="modal">
-        <div id="modalDate"></div>
-        <label>Number of Trades:</label>
-        <input type="number" id="tradesInput">
-        <label>P&L ($):</label>
-        <input type="number" id="pnlInput">
-        <button onclick="saveEntry()">Save</button>
-        <button onclick="closeModal()">Close</button>
+    <div class="overlay-backdrop" id="overlay-backdrop"></div>
+    <div class="dashboard" id="dashboard"></div>
+    
+    <div class="patient-file-modal" id="patient-file-modal">
+        <div class="patient-file-content" id="patient-file-content"></div>
+    </div>
+    
+    <div class="footer">
+        <div class="footer-left">
+            <span>SYSTEM: PM-2024 v2.1.3</span>
+            <span>|</span>
+            <span>BUILD: 20241215-1432</span>
+        </div>
+        <div class="footer-right">
+            <span>© 2024 Dignity Health St. Joseph's Hospital and Medical Center</span>
+            <span>|</span>
+            <span>FDA 510(k) K123456</span>
+        </div>
     </div>
 
     <script>
-        const calendar = document.getElementById('calendar');
-        const monthYear = document.getElementById('monthYear');
-        const modal = document.getElementById('modal');
-        const tradesInput = document.getElementById('tradesInput');
-        const pnlInput = document.getElementById('pnlInput');
-        const modalDate = document.getElementById('modalDate');
-
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let journalData = JSON.parse(localStorage.getItem('journalData')) || {};
-        let selectedDate = '';
-
-        function renderCalendar(month, year) {
-            calendar.innerHTML = '';
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            monthYear.textContent = `${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}`;
-
-            for (let i = 0; i < firstDay; i++) {
-                const empty = document.createElement('div');
-                calendar.appendChild(empty);
+        // Vital sign ranges and normal values (medically accurate for OR monitoring)
+        // Based on research: typical update rates and variance
+        const vitalRanges = {
+            hr: { 
+                min: 50, max: 120, normalMin: 60, normalMax: 100, unit: 'bpm',
+                updateInterval: 1000, // 1 second (continuous monitoring)
+                variance: 5 // ±5 bpm typical variance
+            },
+            spo2: { 
+                min: 85, max: 100, normalMin: 95, normalMax: 100, unit: '%',
+                updateInterval: 2000, // 2 seconds (continuous pulse oximetry)
+                variance: 1.5 // ±1-2% typical variance
+            },
+            bpSystolic: { 
+                min: 90, max: 160, normalMin: 100, normalMax: 120, unit: 'mmHg',
+                updateInterval: 5000, // 5 seconds (continuous arterial line monitoring in OR)
+                variance: 7 // ±5-10 mmHg typical variance
+            },
+            bpDiastolic: { 
+                min: 50, max: 100, normalMin: 60, normalMax: 80, unit: 'mmHg',
+                updateInterval: 5000, // Same as systolic
+                variance: 5 // ±5 mmHg typical variance
+            },
+            etco2: { 
+                min: 20, max: 50, normalMin: 35, normalMax: 45, unit: 'mmHg',
+                updateInterval: 2000, // 2 seconds (every breath cycle)
+                variance: 3 // ±2-5 mmHg typical variance
             }
+        };
 
-            for (let i = 1; i <= daysInMonth; i++) {
-                const dateKey = `${year}-${month + 1}-${i}`;
-                const entry = journalData[dateKey];
+        // Procedure types for realistic hospital context
+        const procedureTypes = [
+            'Anterior Cruciate Ligament Reconstruction', 'Lumbar Laminectomy with Discectomy', 'Cataract Extraction',
+            'Laparoscopic Appendectomy', 'Hernia Repair', 'Bilateral Augmentation Mammoplasty', 'Hip Replacement',
+            'Colonoscopy', 'Gastric Bypass', 'Spinal Fusion', 'Cardiac Bypass', 'Craniotomy'
+        ];
 
-                const day = document.createElement('div');
-                day.className = 'day';
-                if (entry) {
-                    day.classList.add(entry.pnl >= 0 ? 'green' : 'red');
-                } else {
-                    day.classList.add('blank');
-                }
-                day.textContent = i;
-                day.onclick = () => openModal(dateKey, entry);
+        // Surgeon names for realism
+        const surgeonNames = [
+            'SMITH', 'JOHNSON', 'WILLIAMS', 'BROWN', 'JONES', 'GARCIA',
+            'MILLER', 'DAVIS', 'RODRIGUEZ', 'MARTINEZ', 'WILSON', 'ANDERSON'
+        ];
 
-                calendar.appendChild(day);
+        // Patient names for realism
+        const patientNames = [
+            'Solomon Cole', 'Luc Tran', 'Etham Jacob Elam', 'Ali Rehman',
+            'Owen Alzubi', 'Amelia Hoover', 'Bradley Greger', 'Emily Watson',
+            'Christopher Lee', 'Jennifer Martinez', 'Daniel White', 'Lisa Anderson'
+        ];
+
+        // Emergency contacts
+        const emergencyContacts = [
+            { name: 'Sarah Cole', relationship: 'Spouse', phone: '(602) 555-0123' },
+            { name: 'Minh Tran', relationship: 'Brother', phone: '(602) 555-0124' },
+            { name: 'Patricia Thompson', relationship: 'Wife', phone: '(602) 555-0125' },
+            { name: 'Fatima Rehman', relationship: 'Mother', phone: '(602) 555-0126' },
+            { name: 'Soo Kim', relationship: 'Sister', phone: '(602) 555-0127' },
+            { name: 'Robert Hoover', relationship: 'Father', phone: '(602) 555-0128' },
+            { name: 'Jennifer Foster', relationship: 'Wife', phone: '(602) 555-0129' },
+            { name: 'Thomas Watson', relationship: 'Husband', phone: '(602) 555-0130' },
+            { name: 'Michelle Lee', relationship: 'Wife', phone: '(602) 555-0131' },
+            { name: 'Carlos Martinez', relationship: 'Husband', phone: '(602) 555-0132' },
+            { name: 'Linda White', relationship: 'Wife', phone: '(602) 555-0133' },
+            { name: 'Mark Anderson', relationship: 'Husband', phone: '(602) 555-0134' }
+        ];
+
+        // Insurance information
+        const insuranceProviders = [
+            'Blue Cross Blue Shield', 'Aetna', 'UnitedHealthcare', 'Cigna',
+            'Humana', 'Medicaid', 'Medicare', 'Kaiser Permanente',
+            'Anthem', 'Blue Shield', 'Tricare', 'AARP'
+        ];
+
+        const insurancePolicyNumbers = [
+            'BCBS-123456789', 'AET-987654321', 'UHC-456789123', 'CIG-789123456',
+            'HUM-321654987', 'MED-654321987', 'MED-147258369', 'KP-258369147',
+            'ANT-369147258', 'BS-741852963', 'TRI-852963741', 'AARP-963741852'
+        ];
+
+        // Lab results templates
+        const labResults = [
+            [
+                { test: 'CBC - Hemoglobin', value: '14.2 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'CBC - Hematocrit', value: '42.1%', normal: '36-46%', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '98 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' },
+                { test: 'Coagulation - PT/INR', value: '1.1', normal: '0.9-1.2', date: '2024-12-14', status: 'normal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '13.8 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Creatinine', value: '0.9 mg/dL', normal: '0.6-1.2', date: '2024-12-14', status: 'normal' },
+                { test: 'Coagulation - PT/INR', value: '1.0', normal: '0.9-1.2', date: '2024-12-14', status: 'normal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '15.1 g/dL', normal: '12.0-16.0', date: '2024-12-13', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '102 mg/dL', normal: '70-100', date: '2024-12-13', status: 'slightly_high' },
+                { test: 'Lipid Panel - Total Cholesterol', value: '185 mg/dL', normal: '<200', date: '2024-12-13', status: 'normal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '12.9 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '88 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' },
+                { test: 'Coagulation - PT/INR', value: '1.2', normal: '0.9-1.2', date: '2024-12-14', status: 'normal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '14.5 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '95 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' },
+                { test: 'Sleep Study - AHI', value: '8 events/hr', normal: '<5', date: '2024-12-10', status: 'mild' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '13.5 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '92 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' },
+                { test: 'Pregnancy Test', value: 'Negative', normal: 'Negative', date: '2024-12-14', status: 'normal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '13.2 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '96 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' },
+                { test: 'Pulmonary Function - FEV1', value: '82%', normal: '>80%', date: '2024-12-13', status: 'normal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '14.0 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Thyroid Panel - TSH', value: '2.1 mIU/L', normal: '0.4-4.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '94 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '12.5 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Creatinine', value: '1.8 mg/dL', normal: '0.6-1.2', date: '2024-12-14', status: 'high' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '108 mg/dL', normal: '70-100', date: '2024-12-14', status: 'slightly_high' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '13.8 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '91 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' },
+                { test: 'Rheumatology - ANA', value: 'Positive 1:160', normal: 'Negative', date: '2024-12-13', status: 'abnormal' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '14.8 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '97 mg/dL', normal: '70-100', date: '2024-12-14', status: 'normal' },
+                { test: 'Pulmonary Function - FEV1', value: '68%', normal: '>80%', date: '2024-12-13', status: 'low' }
+            ],
+            [
+                { test: 'CBC - Hemoglobin', value: '13.6 g/dL', normal: '12.0-16.0', date: '2024-12-14', status: 'normal' },
+                { test: 'Basic Metabolic Panel - Glucose', value: '145 mg/dL', normal: '70-100', date: '2024-12-14', status: 'high' },
+                { test: 'HbA1c', value: '7.2%', normal: '<5.7%', date: '2024-12-14', status: 'high' }
+            ]
+        ];
+
+        // Medication administration times
+        const medicationAdminTimes = [
+            [
+                { medication: 'Lisinopril 10mg', time: '06:00', route: 'PO', given: true },
+                { medication: 'Metformin 500mg', time: '08:00', route: 'PO', given: true },
+                { medication: 'Metformin 500mg', time: '20:00', route: 'PO', given: false },
+                { medication: 'Omeprazole 20mg', time: '07:00', route: 'PO', given: true }
+            ],
+            [
+                { medication: 'Albuterol inhaler', time: '07:00', route: 'INH', given: true },
+                { medication: 'Loratadine 10mg', time: '08:00', route: 'PO', given: true }
+            ],
+            [
+                { medication: 'Atorvastatin 20mg', time: '20:00', route: 'PO', given: false },
+                { medication: 'Ibuprofen 600mg', time: '08:00', route: 'PO', given: true }
+            ],
+            [
+                { medication: 'Omeprazole 40mg', time: '07:00', route: 'PO', given: true },
+                { medication: 'Sumatriptan 50mg', time: 'PRN', route: 'PO', given: false }
+            ],
+            [
+                { medication: 'Amlodipine 5mg', time: '08:00', route: 'PO', given: true },
+                { medication: 'CPAP', time: '22:00', route: 'CPAP', given: false }
+            ],
+            [
+                { medication: 'None', time: 'N/A', route: 'N/A', given: false }
+            ],
+            [
+                { medication: 'Albuterol inhaler', time: 'PRN', route: 'INH', given: false },
+                { medication: 'Sertraline 50mg', time: '08:00', route: 'PO', given: true }
+            ],
+            [
+                { medication: 'Levothyroxine 75mcg', time: '07:00', route: 'PO', given: true },
+                { medication: 'Omeprazole 20mg', time: '08:00', route: 'PO', given: true }
+            ],
+            [
+                { medication: 'Lisinopril 20mg', time: '08:00', route: 'PO', given: true },
+                { medication: 'Metformin 1000mg', time: '08:00', route: 'PO', given: true },
+                { medication: 'Furosemide 40mg', time: '09:00', route: 'PO', given: true }
+            ],
+            [
+                { medication: 'Gabapentin 300mg', time: '08:00', route: 'PO', given: true },
+                { medication: 'Gabapentin 300mg', time: '14:00', route: 'PO', given: false },
+                { medication: 'Gabapentin 300mg', time: '20:00', route: 'PO', given: false }
+            ],
+            [
+                { medication: 'Lisinopril 10mg', time: '08:00', route: 'PO', given: true },
+                { medication: 'Albuterol inhaler', time: 'PRN', route: 'INH', given: false }
+            ],
+            [
+                { medication: 'Insulin glargine 20 units', time: '20:00', route: 'SC', given: false },
+                { medication: 'Insulin lispro', time: 'PRN', route: 'SC', given: false }
+            ]
+        ];
+
+        // Medical history templates
+        const medicalConditions = [
+            ['Hypertension', 'Type 2 Diabetes', 'GERD'],
+            ['Asthma', 'Seasonal Allergies'],
+            ['Hyperlipidemia', 'Osteoarthritis'],
+            ['GERD', 'Migraines'],
+            ['Hypertension', 'Sleep Apnea'],
+            ['None'],
+            ['Asthma', 'Anxiety'],
+            ['Hypothyroidism', 'GERD'],
+            ['Hypertension', 'Type 2 Diabetes', 'Chronic Kidney Disease'],
+            ['Migraines', 'Fibromyalgia'],
+            ['Hypertension', 'COPD'],
+            ['Type 1 Diabetes', 'Celiac Disease']
+        ];
+
+        const allergies = [
+            ['Penicillin', 'Sulfa drugs'],
+            ['Latex', 'Shellfish'],
+            ['None known'],
+            ['Iodine', 'Aspirin'],
+            ['Codeine'],
+            ['Latex'],
+            ['Penicillin'],
+            ['None known'],
+            ['Penicillin', 'Contrast dye'],
+            ['NSAIDs'],
+            ['Morphine'],
+            ['Penicillin', 'Latex']
+        ];
+
+        const medications = [
+            ['Lisinopril 10mg daily', 'Metformin 500mg BID', 'Omeprazole 20mg daily'],
+            ['Albuterol inhaler PRN', 'Loratadine 10mg daily'],
+            ['Atorvastatin 20mg daily', 'Ibuprofen 600mg TID'],
+            ['Omeprazole 40mg daily', 'Sumatriptan 50mg PRN'],
+            ['Amlodipine 5mg daily', 'CPAP nightly'],
+            ['None'],
+            ['Albuterol inhaler PRN', 'Sertraline 50mg daily'],
+            ['Levothyroxine 75mcg daily', 'Omeprazole 20mg daily'],
+            ['Lisinopril 20mg daily', 'Metformin 1000mg BID', 'Furosemide 40mg daily'],
+            ['Gabapentin 300mg TID', 'Sumatriptan 100mg PRN'],
+            ['Lisinopril 10mg daily', 'Albuterol inhaler PRN'],
+            ['Insulin glargine 20 units daily', 'Insulin lispro PRN']
+        ];
+
+        const doctorNotes = [
+            [
+                { author: 'Dr. SMITH', date: '2024-12-10', text: 'Patient presents for ACL reconstruction. Pre-op clearance obtained. BP well controlled on current medications. Continue home meds through surgery date.' },
+                { author: 'Dr. JOHNSON', date: '2024-12-14', text: 'Pre-operative assessment complete. Patient stable for procedure. Anesthesia consult completed, no concerns noted.' }
+            ],
+            [
+                { author: 'Dr. WILLIAMS', date: '2024-12-11', text: 'Post-MVA with lumbar disc herniation. MRI confirms L4-L5 disc protrusion. Patient reports significant radicular pain. Proceeding with laminectomy/discectomy.' },
+                { author: 'Dr. BROWN', date: '2024-12-15', text: 'Pre-op labs within normal limits. Patient cleared for surgery. Latex allergy noted - ensure latex-free environment.' }
+            ],
+            [
+                { author: 'Dr. JONES', date: '2024-12-09', text: 'Routine cataract extraction. Patient healthy, no significant comorbidities. Standard pre-op protocol.' },
+                { author: 'Dr. GARCIA', date: '2024-12-13', text: 'Pre-op assessment unremarkable. Patient ready for procedure.' }
+            ],
+            [
+                { author: 'Dr. MILLER', date: '2024-12-12', text: 'Acute appendicitis confirmed via CT. Proceeding with laparoscopic appendectomy. Patient stable, no contraindications.' },
+                { author: 'Dr. DAVIS', date: '2024-12-15', text: 'Pre-op clearance obtained. Patient NPO since midnight. Ready for surgery.' }
+            ],
+            [
+                { author: 'Dr. RODRIGUEZ', date: '2024-12-10', text: 'Hernia repair scheduled. Patient on CPAP for sleep apnea - ensure available for post-op recovery.' },
+                { author: 'Dr. MARTINEZ', date: '2024-12-14', text: 'Pre-op assessment complete. Continue home medications. BP controlled.' }
+            ],
+            [
+                { author: 'Dr. WILSON', date: '2024-12-11', text: 'Bilateral augmentation mammoplasty scheduled. Patient healthy, no significant medical history. Standard pre-op workup completed.' },
+                { author: 'Dr. ANDERSON', date: '2024-12-15', text: 'Pre-op labs normal. Patient cleared for procedure. Latex allergy documented.' }
+            ],
+            [
+                { author: 'Dr. SMITH', date: '2024-12-09', text: 'Hip replacement for advanced osteoarthritis. Patient stable on current medications. Pre-op clearance obtained.' },
+                { author: 'Dr. JOHNSON', date: '2024-12-13', text: 'Pre-op assessment unremarkable. Continue home meds. Patient ready for surgery.' }
+            ],
+            [
+                { author: 'Dr. WILLIAMS', date: '2024-12-12', text: 'Routine colonoscopy for screening. Patient healthy, no concerns. Standard prep protocol.' },
+                { author: 'Dr. BROWN', date: '2024-12-15', text: 'Pre-op clearance obtained. Patient ready for procedure.' }
+            ],
+            [
+                { author: 'Dr. JONES', date: '2024-12-10', text: 'Gastric bypass for morbid obesity. Extensive pre-op workup completed. Patient counseled on risks and benefits.' },
+                { author: 'Dr. GARCIA', date: '2024-12-14', text: 'Pre-op labs reviewed. Continue home medications. Patient stable for procedure.' }
+            ],
+            [
+                { author: 'Dr. MILLER', date: '2024-12-11', text: 'Spinal fusion for degenerative disc disease. Patient reports chronic back pain. Pre-op imaging reviewed.' },
+                { author: 'Dr. DAVIS', date: '2024-12-15', text: 'Pre-op assessment complete. Patient cleared for surgery. Continue pain management medications.' }
+            ],
+            [
+                { author: 'Dr. RODRIGUEZ', date: '2024-12-09', text: 'Cardiac bypass surgery scheduled. Patient stable on current cardiac medications. Pre-op cardiac clearance obtained.' },
+                { author: 'Dr. MARTINEZ', date: '2024-12-13', text: 'Pre-op assessment complete. Patient ready for procedure. Continue home meds.' }
+            ],
+            [
+                { author: 'Dr. WILSON', date: '2024-12-12', text: 'Craniotomy for brain tumor resection. Extensive pre-op workup completed. Patient and family counseled.' },
+                { author: 'Dr. ANDERSON', date: '2024-12-15', text: 'Pre-op labs and imaging reviewed. Patient stable. Ready for surgery.' }
+            ]
+        ];
+
+        // Generate initial patient data with realistic baseline values
+        const patientData = [];
+        for (let i = 1; i <= 12; i++) {
+            // Each patient has unique baseline values within normal ranges
+            const baseHR = 65 + Math.random() * 20; // 65-85 bpm baseline
+            const baseSpO2 = 97 + Math.random() * 2; // 97-99% baseline
+            const baseSystolic = 105 + Math.random() * 15; // 105-120 mmHg baseline
+            const baseDiastolic = 60 + Math.random() * 15; // 60-75 mmHg baseline
+            const baseEtCO2 = 37 + Math.random() * 6; // 37-43 mmHg baseline
+            
+            const baseTemp = 36.5 + Math.random() * 1.0; // 36.5-37.5°C
+            const baseRespRate = 12 + Math.random() * 6; // 12-18 breaths/min
+            const baseRRInterval = 600 + Math.random() * 200; // 600-800ms
+            
+            // Generate random start time (within last 2 hours)
+            const startTime = new Date(Date.now() - Math.random() * 7200000);
+            
+            // Generate consistent DOB for this patient
+            // Amelia Hoover (OR 6) is 19 years old
+            let birthYear, birthMonth, birthDay;
+            if (i === 6) {
+                // Amelia Hoover - 19 years old
+                const currentYear = new Date().getFullYear();
+                birthYear = currentYear - 19;
+                birthMonth = Math.floor(Math.random() * 12);
+                birthDay = Math.floor(Math.random() * 28) + 1;
+            } else {
+                birthYear = 1950 + Math.floor(Math.random() * 50);
+                birthMonth = Math.floor(Math.random() * 12);
+                birthDay = Math.floor(Math.random() * 28) + 1;
             }
-        }
-
-        function openModal(date, entry) {
-            selectedDate = date;
-            modalDate.textContent = date;
-            tradesInput.value = entry ? entry.trades : '';
-            pnlInput.value = entry ? entry.pnl : '';
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-
-        function saveEntry() {
-            journalData[selectedDate] = {
-                trades: parseInt(tradesInput.value),
-                pnl: parseFloat(pnlInput.value)
+            const dob = new Date(birthYear, birthMonth, birthDay);
+            
+            const stream = {
+                patientId: `PAT-${String(i).padStart(4, '0')}`,
+                roomNumber: i,
+                patientName: patientNames[i - 1],
+                procedure: procedureTypes[i - 1],
+                monitorId: `MON-${String(1000 + i).padStart(4, '0')}`,
+                surgeon: surgeonNames[i - 1],
+                startTime: startTime,
+                // Current values for each vital sign
+                currentValues: {
+                    hr: Math.round(baseHR),
+                    spo2: Math.round(baseSpO2 * 10) / 10,
+                    bpSystolic: Math.round(baseSystolic),
+                    bpDiastolic: Math.round(baseDiastolic),
+                    etco2: Math.round(baseEtCO2 * 10) / 10,
+                    temp: Math.round(baseTemp * 10) / 10,
+                    respRate: Math.round(baseRespRate * 10) / 10,
+                    rrInterval: Math.round(baseRRInterval)
+                },
+                // Baseline values for generating new readings
+                baselines: {
+                    hr: baseHR,
+                    spo2: baseSpO2,
+                    bpSystolic: baseSystolic,
+                    bpDiastolic: baseDiastolic,
+                    etco2: baseEtCO2,
+                    temp: baseTemp,
+                    respRate: baseRespRate,
+                    rrInterval: baseRRInterval
+                },
+                // Time tracking for each vital (initialize to allow immediate first update)
+                lastUpdate: {
+                    hr: Date.now() - vitalRanges.hr.updateInterval,
+                    spo2: Date.now() - vitalRanges.spo2.updateInterval,
+                    bp: Date.now() - vitalRanges.bpSystolic.updateInterval,
+                    etco2: Date.now() - vitalRanges.etco2.updateInterval
+                },
+                // Waveform data
+                ecgData: [],
+                respData: [],
+                expanded: false,
+                // Medical history
+                medicalHistory: {
+                    conditions: medicalConditions[i - 1] || [],
+                    allergies: allergies[i - 1] || [],
+                    medications: medications[i - 1] || [],
+                    notes: doctorNotes[i - 1] || []
+                },
+                // Demographics
+                dateOfBirth: dob,
+                mrn: 'MRN-' + String(1000000 + i * 12345).padStart(8, '0'),
+                // Additional patient information
+                emergencyContact: emergencyContacts[i - 1] || {},
+                insurance: {
+                    provider: insuranceProviders[i - 1] || 'Unknown',
+                    policyNumber: insurancePolicyNumbers[i - 1] || 'N/A'
+                },
+                labResults: labResults[i - 1] || [],
+                medicationAdmin: medicationAdminTimes[i - 1] || []
             };
-            localStorage.setItem('journalData', JSON.stringify(journalData));
-            closeModal();
-            renderCalendar(currentMonth, currentYear);
-        }
 
-        function prevMonth() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
+            patientData.push(stream);
+        }
+        
+        // Generate new value with realistic variance
+        function generateNewValue(currentValue, baseline, range, variance, isInteger = false) {
+            // Add small random variation based on typical variance
+            const variation = (Math.random() - 0.5) * 2 * variance;
+            let newValue = currentValue + variation;
+            
+            // Slight drift toward baseline (simulating natural regulation)
+            const drift = (baseline - currentValue) * 0.1;
+            newValue += drift;
+            
+            // Occasional larger variations (5% chance)
+            if (Math.random() < 0.05) {
+                newValue += (Math.random() - 0.5) * variance * 2;
             }
-            renderCalendar(currentMonth, currentYear);
+            
+            // Clamp to valid range
+            newValue = Math.max(range.min, Math.min(range.max, newValue));
+            
+            return isInteger ? Math.round(newValue) : Math.round(newValue * 10) / 10;
         }
 
-        function nextMonth() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
+        // Get status for a vital value
+        function getVitalStatus(value, type) {
+            const range = vitalRanges[type];
+            if (value < range.normalMin || value > range.normalMax) {
+                // Check if critical
+                const criticalThreshold = 0.15; // 15% deviation
+                const normalRange = range.normalMax - range.normalMin;
+                const deviation = Math.min(
+                    Math.abs(value - range.normalMin),
+                    Math.abs(value - range.normalMax)
+                ) / normalRange;
+                
+                return deviation > criticalThreshold ? 'critical' : 'warning';
             }
-            renderCalendar(currentMonth, currentYear);
+            return 'normal';
         }
 
-        renderCalendar(currentMonth, currentYear);
+        // Format BP value
+        function formatBP(systolic, diastolic) {
+            return `${systolic}/${diastolic}`;
+        }
+
+        // Get BP status (check both systolic and diastolic)
+        function getBPStatus(systolic, diastolic) {
+            const sysStatus = getVitalStatus(systolic, 'bpSystolic');
+            const diaStatus = getVitalStatus(diastolic, 'bpDiastolic');
+            // Return the more critical status
+            if (sysStatus === 'critical' || diaStatus === 'critical') return 'critical';
+            if (sysStatus === 'warning' || diaStatus === 'warning') return 'warning';
+            return 'normal';
+        }
+
+
+        // Store references to DOM elements for each patient
+        const patientElements = [];
+
+        // Initialize dashboard structure (only once)
+        function initializeDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            
+            patientData.forEach((patient, index) => {
+                const module = document.createElement('div');
+                module.className = 'patient-module';
+                module.innerHTML = `
+                    <button class="minimize-button" aria-label="Minimize">−</button>
+                    <div class="module-header">
+                        <div class="module-header-left">
+                            <div class="room-number">OR ${patient.roomNumber} - <span class="patient-name-display">${patient.patientName}</span></div>
+                            <div class="procedure-info">${patient.procedure}</div>
+                        </div>
+                        <div class="module-meta">
+                        <div class="patient-id">${patient.patientId}</div>
+                            <div>${patient.monitorId}</div>
+                        </div>
+                    </div>
+                    <div class="vitals-grid">
+                        <div class="vital hr">
+                            <div class="vital-label">Heart Rate</div>
+                            <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">${vitalRanges.hr.unit}</span></div>
+                            <div class="vital-status"></div>
+                        </div>
+                        <div class="vital spo2">
+                            <div class="vital-label">SpO₂</div>
+                            <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">${vitalRanges.spo2.unit}</span></div>
+                            <div class="vital-status"></div>
+                        </div>
+                        <div class="vital bp">
+                            <div class="vital-label">Blood Pressure</div>
+                            <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">mmHg</span></div>
+                            <div class="vital-status"></div>
+                        </div>
+                        <div class="vital etco2">
+                            <div class="vital-label">EtCO₂</div>
+                            <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">${vitalRanges.etco2.unit}</span></div>
+                            <div class="vital-status"></div>
+                        </div>
+                    </div>
+                    <div class="expanded-content">
+                        <div class="patient-info-section">
+                            <div class="patient-info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Procedure</div>
+                                    <div class="info-value">${patient.procedure}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Surgeon</div>
+                                    <div class="info-value surgeon-name">DR. <span class="surgeon-value"></span></div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Anesthesia</div>
+                                    <div class="info-value anesthesia-type">General</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Start Time</div>
+                                    <div class="info-value start-time"></div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Monitor ID</div>
+                                    <div class="info-value">${patient.monitorId}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Case Duration</div>
+                                    <div class="info-value case-duration">00:00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="waveform-container">
+                            <div class="waveform-header">
+                                <span class="waveform-label">ECG Lead II</span>
+                                <span class="waveform-value">HR: <span class="ecg-hr-value"></span> bpm | RR: <span class="ecg-rr-value"></span> ms</span>
+                            </div>
+                            <canvas class="waveform-canvas ecg-canvas"></canvas>
+                        </div>
+                        <div class="waveform-container">
+                            <div class="waveform-header">
+                                <span class="waveform-label">Respiratory Rate</span>
+                                <span class="waveform-value">RR: <span class="resp-rate-value"></span> /min</span>
+                            </div>
+                            <canvas class="waveform-canvas resp-canvas"></canvas>
+                        </div>
+                        <div class="additional-vitals">
+                            <div class="additional-vital">
+                                <div class="additional-vital-label">Temperature</div>
+                                <div class="additional-vital-value temp-value">--</div>
+                            </div>
+                            <div class="additional-vital">
+                                <div class="additional-vital-label">Respiratory Rate</div>
+                                <div class="additional-vital-value resp-value">--</div>
+                            </div>
+                            <div class="additional-vital">
+                                <div class="additional-vital-label">RR Interval</div>
+                                <div class="additional-vital-value rr-value">--</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+                
+                // Initialize waveform data arrays with actual waveform data
+                // Generate initial waveform data so it's ready when module is expanded
+                const now = Date.now() / 1000;
+                for (let j = 0; j < 400; j++) {
+                    const time = now - (400 - j) * 0.01; // 10ms per point, going back in time
+                    patient.ecgData.push(generateECGPoint(patient, time));
+                    patient.respData.push(generateRespPoint(patient, time));
+                }
+                
+                dashboard.appendChild(module);
+                
+                // Store references to updateable elements
+                const vitals = module.querySelectorAll('.vital');
+                const elements = {
+                    module: module,
+                    hr: {
+                        element: vitals[0],
+                        value: vitals[0].querySelector('.vital-number'),
+                        status: vitals[0].querySelector('.vital-status')
+                    },
+                    spo2: {
+                        element: vitals[1],
+                        value: vitals[1].querySelector('.vital-number'),
+                        status: vitals[1].querySelector('.vital-status')
+                    },
+                    bp: {
+                        element: vitals[2],
+                        value: vitals[2].querySelector('.vital-number'),
+                        status: vitals[2].querySelector('.vital-status')
+                    },
+                    etco2: {
+                        element: vitals[3],
+                        value: vitals[3].querySelector('.vital-number'),
+                        status: vitals[3].querySelector('.vital-status')
+                    },
+                    ecgCanvas: module.querySelector('.ecg-canvas'),
+                    respCanvas: module.querySelector('.resp-canvas'),
+                    ecgHrValue: module.querySelector('.ecg-hr-value'),
+                    ecgRrValue: module.querySelector('.ecg-rr-value'),
+                    respRateValue: module.querySelector('.resp-rate-value'),
+                    tempValue: module.querySelector('.temp-value'),
+                    respValue: module.querySelector('.resp-value'),
+                    rrValue: module.querySelector('.rr-value'),
+                    surgeonValue: module.querySelector('.surgeon-value'),
+                    startTimeValue: module.querySelector('.start-time'),
+                    caseDurationValue: module.querySelector('.case-duration')
+                };
+                
+                patientElements.push(elements);
+                
+                // Initialize patient info
+                if (elements.surgeonValue) elements.surgeonValue.textContent = patient.surgeon;
+                if (elements.startTimeValue) {
+                    const startTimeStr = patient.startTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+                    elements.startTimeValue.textContent = startTimeStr;
+                }
+                
+                // Add click handler to patient ID
+                const patientIdElement = module.querySelector('.patient-id');
+                if (patientIdElement) {
+                    patientIdElement.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showPatientFile(index);
+                    });
+                }
+                
+                // Get minimize button reference
+                const minimizeButton = module.querySelector('.minimize-button');
+                
+                // Function to collapse module back to original position (instant, no animation)
+                function collapseModule() {
+                    if (!patient.originalPosition) return;
+                    
+                    const overlayBackdrop = document.getElementById('overlay-backdrop');
+                    
+                    // Instantly collapse - no animation
+                    patient.expanded = false;
+                    module.classList.remove('expanded');
+                    overlayBackdrop.classList.remove('active');
+                    
+                    // Reset styles immediately
+                    module.style.position = '';
+                    module.style.left = '';
+                    module.style.top = '';
+                    module.style.transform = '';
+                    module.style.width = '';
+                    module.style.maxWidth = '';
+                    patient.originalPosition = null;
+                }
+                
+                // Add click handler for minimize button
+                minimizeButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    collapseModule();
+                });
+                
+                // Add click handler for expand/collapse
+                module.addEventListener('click', (e) => {
+                    // Don't do anything if clicking on minimize button or expanded content
+                    if (e.target === minimizeButton || e.target.closest('.minimize-button') || e.target.closest('.expanded-content')) {
+                        return;
+                    }
+                    
+                    // If module is already expanded, don't do anything (only minimize button or backdrop can close it)
+                    if (patient.expanded) {
+                        return;
+                    }
+                    
+                    // Only expand when clicking on header or vitals grid (and module is not expanded)
+                    if (e.target.closest('.module-header') || e.target.closest('.vitals-grid')) {
+                        const overlayBackdrop = document.getElementById('overlay-backdrop');
+                        // Close all other expanded modules (instant, no animation)
+                        patientData.forEach((p, idx) => {
+                            if (p.expanded && idx !== index) {
+                                const otherModule = patientElements[idx].module;
+                                
+                                // Instantly collapse - no animation
+                                p.expanded = false;
+                                otherModule.classList.remove('expanded');
+                                overlayBackdrop.classList.remove('active');
+                                
+                                // Reset styles immediately
+                                otherModule.style.position = '';
+                                otherModule.style.left = '';
+                                otherModule.style.top = '';
+                                otherModule.style.transform = '';
+                                otherModule.style.width = '';
+                                otherModule.style.maxWidth = '';
+                                p.originalPosition = null;
+                            }
+                        });
+                        
+                        // Store original position and size
+                            const rect = module.getBoundingClientRect();
+                            const originalX = rect.left + rect.width / 2;
+                            const originalY = rect.top + rect.height / 2;
+                            const originalWidth = rect.width;
+                            
+                            // Store original position
+                            patient.originalPosition = { originalX, originalY, originalWidth };
+                            
+                            // Set position and size instantly
+                            module.style.position = 'fixed';
+                            const centerX = window.innerWidth / 2;
+                            const centerY = window.innerHeight / 2;
+                            module.style.left = centerX + 'px';
+                            module.style.top = centerY + 'px';
+                            module.style.transform = 'translate(-50%, -50%)';
+                            module.style.width = '90%';
+                            module.style.maxWidth = '1200px';
+                            module.style.maxHeight = '90vh';
+                            module.style.overflowY = 'auto';
+                            
+                        // Add expanded class
+                        patient.expanded = true;
+                        module.classList.add('expanded');
+                        overlayBackdrop.classList.add('active');
+                        
+                        initializeWaveforms(index);
+                    }
+                });
+            });
+        }
+        
+        // Generate ECG waveform point
+        function generateECGPoint(patient, time) {
+            const hr = patient.currentValues.hr;
+            const period = 60 / hr; // seconds per beat
+            const phase = (time % period) / period;
+            
+            // Simulate ECG waveform (simplified QRS complex)
+            if (phase < 0.1) return 0.1; // P wave
+            if (phase < 0.15) return -0.05; // PR segment
+            if (phase < 0.2) return 1.0; // QRS peak
+            if (phase < 0.25) return -0.3; // S wave
+            if (phase < 0.4) return 0.2; // ST segment
+            if (phase < 0.6) return 0.0; // T wave
+            return 0.0; // Baseline
+        }
+        
+        // Generate respiratory waveform point
+        function generateRespPoint(patient, time) {
+            const respRate = patient.currentValues.respRate;
+            const period = 60 / respRate; // seconds per breath
+            const phase = (time % period) / period;
+            
+            // Simulate respiratory waveform (sine wave with slight variation)
+            return Math.sin(phase * Math.PI * 2) * 0.8 + (Math.random() - 0.5) * 0.1;
+        }
+        
+        // Draw waveform on canvas
+        function drawWaveform(canvas, data, color, baseline = 0.5) {
+            const ctx = canvas.getContext('2d');
+            // Get actual display size
+            const rect = canvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            
+            // Set canvas internal size to match display size for crisp rendering
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+            
+            const centerY = height * baseline;
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const step = width / data.length;
+            for (let i = 0; i < data.length; i++) {
+                const x = i * step;
+                const y = centerY - (data[i] * height * 0.4);
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Draw baseline
+            ctx.strokeStyle = 'rgba(139, 148, 158, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+        }
+        
+        // Initialize waveforms display when module is expanded
+        // Since waveform data is continuously updated for all patients,
+        // we just need to draw the current state
+        function initializeWaveforms(patientIndex) {
+            const patient = patientData[patientIndex];
+            const elements = patientElements[patientIndex];
+            
+            if (!patient.expanded) return;
+            
+            // Draw current waveform data (which is already being continuously updated)
+            drawWaveform(elements.ecgCanvas, patient.ecgData, '#58a6ff', 0.5);
+            drawWaveform(elements.respCanvas, patient.respData, '#3fb950', 0.5);
+            
+            // Update additional vital values
+            if (elements.ecgHrValue) elements.ecgHrValue.textContent = patient.currentValues.hr;
+            if (elements.ecgRrValue) elements.ecgRrValue.textContent = Math.round(patient.currentValues.rrInterval);
+            if (elements.respRateValue) elements.respRateValue.textContent = Math.round(patient.currentValues.respRate);
+            if (elements.tempValue) elements.tempValue.textContent = patient.currentValues.temp.toFixed(1) + '°C';
+            if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
+            if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
+            
+            // Update case duration
+            if (elements.caseDurationValue) {
+                const duration = Math.floor((Date.now() - patient.startTime.getTime()) / 1000);
+                const hours = Math.floor(duration / 3600);
+                const minutes = Math.floor((duration % 3600) / 60);
+                const seconds = duration % 60;
+                if (hours > 0) {
+                    elements.caseDurationValue.textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                } else {
+                    elements.caseDurationValue.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                }
+            }
+        }
+        
+        // Update additional vital signs (temp, respRate, rrInterval)
+        function updateAdditionalVitals(patientIndex) {
+            const patient = patientData[patientIndex];
+            const elements = patientElements[patientIndex];
+            
+            // Update temp with small variance
+            patient.currentValues.temp = generateNewValue(
+                patient.currentValues.temp,
+                patient.baselines.temp,
+                { min: 35.5, max: 38.5 },
+                0.1,
+                false
+            );
+            
+            // Update respiratory rate
+            patient.currentValues.respRate = generateNewValue(
+                patient.currentValues.respRate,
+                patient.baselines.respRate,
+                { min: 10, max: 20 },
+                1,
+                false
+            );
+            
+            // Update RR interval (inversely related to HR)
+            const targetRR = 60000 / patient.currentValues.hr; // ms
+            patient.currentValues.rrInterval = generateNewValue(
+                patient.currentValues.rrInterval,
+                targetRR,
+                { min: 400, max: 1200 },
+                20,
+                true
+            );
+            
+            // Update displayed values if expanded
+            if (patient.expanded) {
+                if (elements.tempValue) elements.tempValue.textContent = patient.currentValues.temp.toFixed(1) + '°C';
+                if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
+                if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
+            }
+        }
+        
+        // Update waveforms continuously for expanded modules
+        function updateWaveforms() {
+            const now = Date.now() / 1000;
+            
+            patientData.forEach((patient, index) => {
+                // Update waveform data for ALL patients continuously (not just expanded ones)
+                // Shift data left and add new point
+                patient.ecgData.shift();
+                patient.respData.shift();
+                patient.ecgData.push(generateECGPoint(patient, now));
+                patient.respData.push(generateRespPoint(patient, now));
+                
+                // Only draw waveforms if the module is expanded
+                if (patient.expanded) {
+                    const elements = patientElements[index];
+                    drawWaveform(elements.ecgCanvas, patient.ecgData, '#58a6ff', 0.5);
+                    drawWaveform(elements.respCanvas, patient.respData, '#3fb950', 0.5);
+                    
+                    // Update displayed values
+                    if (elements.ecgHrValue) elements.ecgHrValue.textContent = patient.currentValues.hr;
+                    if (elements.ecgRrValue) elements.ecgRrValue.textContent = Math.round(patient.currentValues.rrInterval);
+                    if (elements.respRateValue) elements.respRateValue.textContent = Math.round(patient.currentValues.respRate);
+                    if (elements.tempValue) elements.tempValue.textContent = patient.currentValues.temp.toFixed(1) + '°C';
+                    if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
+                    if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
+                    
+                    // Update case duration
+                    if (elements.caseDurationValue) {
+                        const duration = Math.floor((Date.now() - patient.startTime.getTime()) / 1000);
+                        const hours = Math.floor(duration / 3600);
+                        const minutes = Math.floor((duration % 3600) / 60);
+                        const seconds = duration % 60;
+                        if (hours > 0) {
+                            elements.caseDurationValue.textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                        } else {
+                            elements.caseDurationValue.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update individual vital sign
+        function updateVital(patientIndex, vitalType) {
+            const patient = patientData[patientIndex];
+            const elements = patientElements[patientIndex];
+            const now = Date.now();
+            
+            // Handle BP separately since it uses different range keys
+            let range, updateInterval;
+            if (vitalType === 'bp') {
+                range = vitalRanges.bpSystolic; // Use systolic range for interval check
+                updateInterval = vitalRanges.bpSystolic.updateInterval;
+            } else {
+                range = vitalRanges[vitalType];
+                updateInterval = range.updateInterval;
+            }
+            
+            // Check if it's time to update this vital
+            const timeSinceUpdate = now - patient.lastUpdate[vitalType];
+            if (timeSinceUpdate < updateInterval) {
+                return; // Not time to update yet
+            }
+            
+            patient.lastUpdate[vitalType] = now;
+            
+            if (vitalType === 'hr') {
+                patient.currentValues.hr = generateNewValue(
+                    patient.currentValues.hr,
+                    patient.baselines.hr,
+                    vitalRanges.hr,
+                    vitalRanges.hr.variance,
+                    true
+                );
+                const hrStatus = getVitalStatus(patient.currentValues.hr, 'hr');
+                elements.hr.value.textContent = patient.currentValues.hr;
+                elements.hr.status.textContent = hrStatus.toUpperCase();
+                elements.hr.status.className = `vital-status status-${hrStatus}`;
+                elements.hr.element.className = `vital hr ${hrStatus}`;
+            } else if (vitalType === 'spo2') {
+                patient.currentValues.spo2 = generateNewValue(
+                    patient.currentValues.spo2,
+                    patient.baselines.spo2,
+                    vitalRanges.spo2,
+                    vitalRanges.spo2.variance,
+                    false
+                );
+                const spo2Status = getVitalStatus(patient.currentValues.spo2, 'spo2');
+                elements.spo2.value.textContent = patient.currentValues.spo2;
+                elements.spo2.status.textContent = spo2Status.toUpperCase();
+                elements.spo2.status.className = `vital-status status-${spo2Status}`;
+                elements.spo2.element.className = `vital spo2 ${spo2Status}`;
+            } else if (vitalType === 'bp') {
+                patient.currentValues.bpSystolic = generateNewValue(
+                    patient.currentValues.bpSystolic,
+                    patient.baselines.bpSystolic,
+                    vitalRanges.bpSystolic,
+                    vitalRanges.bpSystolic.variance,
+                    true
+                );
+                patient.currentValues.bpDiastolic = generateNewValue(
+                    patient.currentValues.bpDiastolic,
+                    patient.baselines.bpDiastolic,
+                    vitalRanges.bpDiastolic,
+                    vitalRanges.bpDiastolic.variance,
+                    true
+                );
+                // Ensure diastolic is always less than systolic
+                if (patient.currentValues.bpDiastolic >= patient.currentValues.bpSystolic - 20) {
+                    patient.currentValues.bpDiastolic = patient.currentValues.bpSystolic - 20;
+                }
+                const bpStatus = getBPStatus(patient.currentValues.bpSystolic, patient.currentValues.bpDiastolic);
+                elements.bp.value.textContent = formatBP(patient.currentValues.bpSystolic, patient.currentValues.bpDiastolic);
+                elements.bp.status.textContent = bpStatus.toUpperCase();
+                elements.bp.status.className = `vital-status status-${bpStatus}`;
+                elements.bp.element.className = `vital bp ${bpStatus}`;
+            } else if (vitalType === 'etco2') {
+                patient.currentValues.etco2 = generateNewValue(
+                    patient.currentValues.etco2,
+                    patient.baselines.etco2,
+                    vitalRanges.etco2,
+                    vitalRanges.etco2.variance,
+                    false
+                );
+                const etco2Status = getVitalStatus(patient.currentValues.etco2, 'etco2');
+                elements.etco2.value.textContent = patient.currentValues.etco2;
+                elements.etco2.status.textContent = etco2Status.toUpperCase();
+                elements.etco2.status.className = `vital-status status-${etco2Status}`;
+                elements.etco2.element.className = `vital etco2 ${etco2Status}`;
+            }
+        }
+
+        // Update all vitals (checks each vital's own update interval)
+        function updateDashboard() {
+            const now = Date.now();
+            
+            // Update each patient's vitals independently
+            patientData.forEach((patient, index) => {
+                updateVital(index, 'hr');
+                updateVital(index, 'spo2');
+                updateVital(index, 'bp');
+                updateVital(index, 'etco2');
+                updateAdditionalVitals(index);
+            });
+
+            // Update timestamp
+            const timestamp = new Date();
+            const timeStr = timestamp.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = timestamp.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+            document.getElementById('timestamp').textContent = `${dateStr} ${timeStr}`;
+        }
+
+        // Close on backdrop click (single handler for all modules - instant, no animation)
+        const overlayBackdrop = document.getElementById('overlay-backdrop');
+        overlayBackdrop.addEventListener('click', () => {
+            patientData.forEach((p, idx) => {
+                if (p.expanded) {
+                    const module = patientElements[idx].module;
+                    
+                    // Instantly collapse - no animation
+                    p.expanded = false;
+                    module.classList.remove('expanded');
+                    overlayBackdrop.classList.remove('active');
+                    
+                    // Reset styles immediately
+                    module.style.position = '';
+                    module.style.left = '';
+                    module.style.top = '';
+                    module.style.transform = '';
+                    module.style.width = '';
+                    module.style.maxWidth = '';
+                    p.originalPosition = null;
+                }
+            });
+        });
+
+        // Show patient file modal
+        function showPatientFile(patientIndex) {
+            const patient = patientData[patientIndex];
+            const modal = document.getElementById('patient-file-modal');
+            const content = document.getElementById('patient-file-content');
+            
+            const age = Math.floor((Date.now() - patient.dateOfBirth.getTime()) / (1000 * 60 * 60 * 24 * 365));
+            
+            content.innerHTML = `
+                <div class="patient-file-header">
+                    <div class="patient-file-title">PATIENT FILE - ${patient.patientId}</div>
+                    <button class="close-file-button" id="close-file-button">×</button>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Patient Information</div>
+                    <div class="file-info-grid">
+                        <div class="file-info-item">
+                            <div class="file-info-label">Name</div>
+                            <div class="file-info-value">${patient.patientName}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Patient ID</div>
+                            <div class="file-info-value">${patient.patientId}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">MRN</div>
+                            <div class="file-info-value">${patient.mrn}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Date of Birth</div>
+                            <div class="file-info-value">${patient.dateOfBirth.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Age</div>
+                            <div class="file-info-value">${age} years</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Current Procedure</div>
+                            <div class="file-info-value">${patient.procedure}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Surgeon</div>
+                            <div class="file-info-value">DR. ${patient.surgeon}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">OR Number</div>
+                            <div class="file-info-value">OR ${patient.roomNumber}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Medical History</div>
+                    <div class="file-info-grid">
+                        <div class="file-info-item">
+                            <div class="file-info-label">Conditions</div>
+                            <div class="file-info-value">${patient.medicalHistory.conditions.join(', ') || 'None'}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Allergies</div>
+                            <div class="file-info-value">${patient.medicalHistory.allergies.join(', ') || 'None known'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Current Medications</div>
+                    <div class="file-notes">
+                        ${patient.medicalHistory.medications.map(med => `<div class="file-note-text">${med}</div>`).join('')}
+                    </div>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Emergency Contact</div>
+                    <div class="file-info-grid">
+                        <div class="file-info-item">
+                            <div class="file-info-label">Name</div>
+                            <div class="file-info-value">${patient.emergencyContact.name || 'N/A'}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Relationship</div>
+                            <div class="file-info-value">${patient.emergencyContact.relationship || 'N/A'}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Phone</div>
+                            <div class="file-info-value">${patient.emergencyContact.phone || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Insurance Information</div>
+                    <div class="file-info-grid">
+                        <div class="file-info-item">
+                            <div class="file-info-label">Provider</div>
+                            <div class="file-info-value">${patient.insurance.provider}</div>
+                        </div>
+                        <div class="file-info-item">
+                            <div class="file-info-label">Policy Number</div>
+                            <div class="file-info-value">${patient.insurance.policyNumber}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Recent Lab Results</div>
+                    <div class="file-notes">
+                        ${patient.labResults.length > 0 ? patient.labResults.map(lab => `
+                            <div class="file-note">
+                                <div class="file-note-header">
+                                    <div class="file-note-author">${lab.test}</div>
+                                    <div class="file-note-date">${lab.date}</div>
+                                </div>
+                                <div class="file-note-text">
+                                    <strong>Value:</strong> ${lab.value} | <strong>Normal Range:</strong> ${lab.normal} | 
+                                    <span style="color: ${lab.status === 'normal' ? '#3fb950' : lab.status === 'high' || lab.status === 'abnormal' ? '#f85149' : '#d29922'}">
+                                        ${lab.status.toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+                        `).join('') : '<div class="file-note-text">No recent lab results</div>'}
+                    </div>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Medication Administration</div>
+                    <div class="file-notes">
+                        ${patient.medicationAdmin.length > 0 ? patient.medicationAdmin.map(med => `
+                            <div class="file-note">
+                                <div class="file-note-header">
+                                    <div class="file-note-author">${med.medication}</div>
+                                    <div class="file-note-date" style="color: ${med.given ? '#3fb950' : '#8b949e'}">
+                                        ${med.time} | ${med.route} | ${med.given ? '✓ GIVEN' : 'PENDING'}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') : '<div class="file-note-text">No scheduled medications</div>'}
+                    </div>
+                </div>
+                
+                <div class="patient-file-section">
+                    <div class="file-section-title">Clinical Notes</div>
+                    <div class="file-notes">
+                        ${patient.medicalHistory.notes.map(note => `
+                            <div class="file-note">
+                                <div class="file-note-header">
+                                    <div class="file-note-author">${note.author}</div>
+                                    <div class="file-note-date">${note.date}</div>
+                                </div>
+                                <div class="file-note-text">${note.text}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            
+            // Close button handler
+            document.getElementById('close-file-button').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+            
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        }
+
+        // Wait for DOM to be ready before initializing
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeDashboard();
+                updateDashboard();
+                setInterval(updateDashboard, 500);
+                setInterval(updateWaveforms, 50);
+            });
+        } else {
+            // DOM is already ready
+            initializeDashboard();
+            updateDashboard();
+            setInterval(updateDashboard, 500);
+            setInterval(updateWaveforms, 50);
+        }
     </script>
 </body>
-
 </html>
