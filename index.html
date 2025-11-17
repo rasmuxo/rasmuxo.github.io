@@ -441,9 +441,17 @@
         }
 
         .patient-file-title {
-            font-size: 1.5em;
+            font-size: 1.8em;
             font-weight: 600;
             color: #e6edf3;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 4px;
+        }
+
+        .patient-file-subtitle {
+            font-size: 1.2em;
+            font-weight: 400;
+            color: #8b949e;
             font-family: 'Inter', sans-serif;
         }
 
@@ -1021,7 +1029,7 @@
 
         // Patient names for realism
         const patientNames = [
-            'Solomon Cole', 'Luc Tran', 'Etham Jacob Elam', 'Ali Rehman',
+            'Solomon Cole', 'Luc Tran', 'Ethan Jacob Elam', 'Ali Rehman',
             'Owen Alzubi', 'Amelia Hoover', 'Bradley Greger', 'Emily Watson',
             'Christopher Lee', 'Jennifer Martinez', 'Daniel White', 'Lisa Anderson'
         ];
@@ -2022,7 +2030,10 @@
             
             content.innerHTML = `
                 <div class="patient-file-header">
-                    <div class="patient-file-title">PATIENT FILE - ${patient.patientId}</div>
+                    <div>
+                        <div class="patient-file-title">${patient.patientName}</div>
+                        <div class="patient-file-subtitle">Patient File</div>
+                    </div>
                     <button class="close-file-button" id="close-file-button">×</button>
                 </div>
                 
