@@ -366,6 +366,44 @@
             font-weight: 600;
             color: #58a6ff;
             font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .module-status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .module-status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1.5px solid #3fb950;
+            animation: dataPulseRing 2s infinite;
+        }
+
+        @keyframes dataPulseRing {
+            0% {
+                width: 8px;
+                height: 8px;
+                opacity: 1;
+            }
+            100% {
+                width: 16px;
+                height: 16px;
+                opacity: 0;
+            }
         }
 
         .patient-name-display {
@@ -561,6 +599,90 @@
             font-family: 'Inter', sans-serif;
         }
 
+        .vital-chart-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3000;
+            overflow-y: auto;
+        }
+
+        .vital-chart-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .vital-chart-content {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .vital-chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .vital-chart-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #e6edf3;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .vital-chart-canvas {
+            width: 100%;
+            height: 300px;
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 4px;
+            margin-top: 16px;
+        }
+
+        .clickable-vital {
+            cursor: pointer !important;
+            transition: opacity 0.2s ease, background-color 0.2s ease;
+        }
+        
+        .vital.clickable-vital {
+            cursor: pointer !important;
+        }
+        
+        .additional-vital.clickable-vital {
+            cursor: pointer !important;
+        }
+        
+        .clickable-vital * {
+            cursor: pointer !important;
+        }
+
+        .clickable-vital:hover {
+            opacity: 0.9;
+            background-color: rgba(88, 166, 255, 0.05);
+        }
+        
+        .vital.clickable-vital:hover {
+            background-color: rgba(88, 166, 255, 0.05);
+        }
+        
+        .additional-vital.clickable-vital:hover {
+            background-color: rgba(88, 166, 255, 0.05);
+        }
+
         .module-meta {
             display: flex;
             flex-direction: column;
@@ -589,6 +711,12 @@
             border-top: 1px solid #21262d;
             border-right: 1px solid #21262d;
             border-bottom: 1px solid #21262d;
+        }
+        
+        /* Show pointer cursor for all clickable vitals */
+        .vital.clickable-vital,
+        .vital.clickable-vital * {
+            cursor: pointer !important;
         }
 
         .vital.normal {
@@ -970,6 +1098,16 @@
         <div class="patient-file-content" id="patient-file-content"></div>
     </div>
     
+    <div class="vital-chart-modal" id="vital-chart-modal">
+        <div class="vital-chart-content">
+            <div class="vital-chart-header">
+                <div class="vital-chart-title" id="vital-chart-title">Vital Sign Trend</div>
+                <button class="close-file-button" id="close-chart-button">×</button>
+            </div>
+            <canvas class="vital-chart-canvas" id="vital-chart-canvas"></canvas>
+        </div>
+    </div>
+    
     <div class="footer">
         <div class="footer-left">
             <span>SYSTEM: PM-2024 v2.1.3</span>
@@ -1029,9 +1167,9 @@
 
         // Patient names for realism
         const patientNames = [
-            'Solomon Cole', 'Luc Tran', 'Ethan Jacob Elam', 'Ali Rehman',
-            'Owen Alzubi', 'Amelia Hoover', 'Bradley Greger', 'Emily Watson',
-            'Christopher Lee', 'Jennifer Martinez', 'Daniel White', 'Lisa Anderson'
+            'Ethan Elam', 'Rasmus Pekin', 'Rylie Sinner', 'Suraj Yeddu',
+            'Prithvi Yuvaraj', 'Amelia Hoover', 'Bradley Greger', 'Brent Vernon',
+            'Vincent Pizziconi', 'Michael Sobrado', 'Ding Ding Zheng', 'Aileene Arias'
         ];
 
         // Emergency contacts
@@ -1354,6 +1492,18 @@
                 ecgData: [],
                 respData: [],
                 expanded: false,
+                // Historical data for charts (store last 100 readings)
+                history: {
+                    hr: [],
+                    spo2: [],
+                    bpSystolic: [],
+                    bpDiastolic: [],
+                    etco2: [],
+                    temp: [],
+                    respRate: [],
+                    rrInterval: []
+                },
+                historyTimestamps: [],
                 // Medical history
                 medicalHistory: {
                     conditions: medicalConditions[i - 1] || [],
@@ -1377,7 +1527,7 @@
             patientData.push(stream);
         }
         
-        // Generate new value with realistic variance
+        // Generate new value with realistic variance (needed for historical data generation)
         function generateNewValue(currentValue, baseline, range, variance, isInteger = false) {
             // Add small random variation based on typical variance
             const variation = (Math.random() - 0.5) * 2 * variance;
@@ -1397,6 +1547,142 @@
             
             return isInteger ? Math.round(newValue) : Math.round(newValue * 10) / 10;
         }
+        
+        // Generate historical data for each patient from procedure start to now
+        function generateHistoricalData(patient, patientIndex) {
+            const now = Date.now();
+            const startTime = patient.startTime.getTime();
+            const duration = now - startTime;
+            
+            // Generate data points every 5 seconds (or every 2 seconds if procedure is short)
+            const interval = Math.max(2000, Math.min(5000, duration / 50)); // Aim for ~50 data points
+            const numPoints = Math.floor(duration / interval);
+            
+            if (numPoints <= 0) return; // No history if procedure just started
+            
+            // Initialize values at procedure start (slightly different from current to show progression)
+            let histHR = patient.baselines.hr + (Math.random() - 0.5) * 10;
+            let histSpO2 = patient.baselines.spo2 + (Math.random() - 0.5) * 1;
+            let histSystolic = patient.baselines.bpSystolic + (Math.random() - 0.5) * 10;
+            let histDiastolic = patient.baselines.bpDiastolic + (Math.random() - 0.5) * 8;
+            let histEtCO2 = patient.baselines.etco2 + (Math.random() - 0.5) * 3;
+            let histTemp = patient.baselines.temp + (Math.random() - 0.5) * 0.3;
+            let histRespRate = patient.baselines.respRate + (Math.random() - 0.5) * 2;
+            let histRRInterval = patient.baselines.rrInterval + (Math.random() - 0.5) * 50;
+            
+            // Generate historical data points
+            for (let i = 0; i < numPoints; i++) {
+                const timestamp = startTime + (i * interval);
+                
+                // Generate values with realistic variation, gradually trending toward current values
+                const progress = i / numPoints; // 0 to 1
+                
+                // HR
+                histHR = generateNewValue(
+                    histHR,
+                    patient.baselines.hr + (patient.currentValues.hr - patient.baselines.hr) * progress,
+                    vitalRanges.hr,
+                    vitalRanges.hr.variance,
+                    true
+                );
+                patient.history.hr.push(histHR);
+                
+                // SpO2
+                histSpO2 = generateNewValue(
+                    histSpO2,
+                    patient.baselines.spo2 + (patient.currentValues.spo2 - patient.baselines.spo2) * progress,
+                    vitalRanges.spo2,
+                    vitalRanges.spo2.variance,
+                    false
+                );
+                patient.history.spo2.push(histSpO2);
+                
+                // BP Systolic
+                histSystolic = generateNewValue(
+                    histSystolic,
+                    patient.baselines.bpSystolic + (patient.currentValues.bpSystolic - patient.baselines.bpSystolic) * progress,
+                    vitalRanges.bpSystolic,
+                    vitalRanges.bpSystolic.variance,
+                    true
+                );
+                patient.history.bpSystolic.push(histSystolic);
+                
+                // BP Diastolic
+                histDiastolic = generateNewValue(
+                    histDiastolic,
+                    patient.baselines.bpDiastolic + (patient.currentValues.bpDiastolic - patient.baselines.bpDiastolic) * progress,
+                    vitalRanges.bpDiastolic,
+                    vitalRanges.bpDiastolic.variance,
+                    true
+                );
+                // Ensure diastolic is less than systolic
+                if (histDiastolic >= histSystolic - 20) {
+                    histDiastolic = histSystolic - 20;
+                }
+                patient.history.bpDiastolic.push(histDiastolic);
+                
+                // EtCO2
+                histEtCO2 = generateNewValue(
+                    histEtCO2,
+                    patient.baselines.etco2 + (patient.currentValues.etco2 - patient.baselines.etco2) * progress,
+                    vitalRanges.etco2,
+                    vitalRanges.etco2.variance,
+                    false
+                );
+                patient.history.etco2.push(histEtCO2);
+                
+                // Temperature
+                histTemp = generateNewValue(
+                    histTemp,
+                    patient.baselines.temp + (patient.currentValues.temp - patient.baselines.temp) * progress,
+                    { min: 35.5, max: 38.5 },
+                    0.1,
+                    false
+                );
+                patient.history.temp.push(histTemp);
+                
+                // Respiratory Rate
+                histRespRate = generateNewValue(
+                    histRespRate,
+                    patient.baselines.respRate + (patient.currentValues.respRate - patient.baselines.respRate) * progress,
+                    { min: 10, max: 20 },
+                    1,
+                    false
+                );
+                patient.history.respRate.push(histRespRate);
+                
+                // RR Interval (inversely related to HR)
+                const targetRR = 60000 / histHR;
+                histRRInterval = generateNewValue(
+                    histRRInterval,
+                    targetRR,
+                    { min: 400, max: 1200 },
+                    20,
+                    true
+                );
+                patient.history.rrInterval.push(histRRInterval);
+                
+                // Store timestamp
+                patient.historyTimestamps.push(timestamp);
+            }
+            
+            // Keep only last 100 points if we generated too many
+            const maxHistory = 100;
+            if (patient.historyTimestamps.length > maxHistory) {
+                const removeCount = patient.historyTimestamps.length - maxHistory;
+                patient.historyTimestamps.splice(0, removeCount);
+                Object.keys(patient.history).forEach(key => {
+                    if (patient.history[key].length > maxHistory) {
+                        patient.history[key].splice(0, removeCount);
+                    }
+                });
+            }
+        }
+        
+        // Generate historical data for all patients
+        patientData.forEach((patient, index) => {
+            generateHistoricalData(patient, index);
+        });
 
         // Get status for a vital value
         function getVitalStatus(value, type) {
@@ -1445,7 +1731,10 @@
                     <button class="minimize-button" aria-label="Minimize">−</button>
                     <div class="module-header">
                         <div class="module-header-left">
-                            <div class="room-number">OR ${patient.roomNumber} - <span class="patient-name-display">${patient.patientName}</span></div>
+                            <div class="room-number">
+                                <span class="module-status-indicator"></span>
+                                <span>OR ${patient.roomNumber} - <span class="patient-name-display">${patient.patientName}</span></span>
+                            </div>
                             <div class="procedure-info">${patient.procedure}</div>
                         </div>
                         <div class="module-meta">
@@ -1454,22 +1743,22 @@
                         </div>
                     </div>
                     <div class="vitals-grid">
-                        <div class="vital hr">
+                        <div class="vital hr clickable-vital" data-vital="hr" data-patient="${index}">
                             <div class="vital-label">Heart Rate</div>
                             <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">${vitalRanges.hr.unit}</span></div>
                             <div class="vital-status"></div>
                         </div>
-                        <div class="vital spo2">
+                        <div class="vital spo2 clickable-vital" data-vital="spo2" data-patient="${index}">
                             <div class="vital-label">SpO₂</div>
                             <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">${vitalRanges.spo2.unit}</span></div>
                             <div class="vital-status"></div>
                         </div>
-                        <div class="vital bp">
+                        <div class="vital bp clickable-vital" data-vital="bp" data-patient="${index}">
                             <div class="vital-label">Blood Pressure</div>
                             <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">mmHg</span></div>
                             <div class="vital-status"></div>
                         </div>
-                        <div class="vital etco2">
+                        <div class="vital etco2 clickable-vital" data-vital="etco2" data-patient="${index}">
                             <div class="vital-label">EtCO₂</div>
                             <div class="vital-value"><span class="vital-number"></span><span class="vital-unit">${vitalRanges.etco2.unit}</span></div>
                             <div class="vital-status"></div>
@@ -1507,27 +1796,27 @@
                         <div class="waveform-container">
                             <div class="waveform-header">
                                 <span class="waveform-label">ECG Lead II</span>
-                                <span class="waveform-value">HR: <span class="ecg-hr-value"></span> bpm | RR: <span class="ecg-rr-value"></span> ms</span>
+                                <span class="waveform-value">HR: <span class="ecg-hr-value clickable-vital" data-vital="hr" data-patient="${index}"></span> bpm | RR: <span class="ecg-rr-value clickable-vital" data-vital="rrInterval" data-patient="${index}"></span> ms</span>
                             </div>
                             <canvas class="waveform-canvas ecg-canvas"></canvas>
                         </div>
                         <div class="waveform-container">
                             <div class="waveform-header">
                                 <span class="waveform-label">Respiratory Rate</span>
-                                <span class="waveform-value">RR: <span class="resp-rate-value"></span> /min</span>
+                                <span class="waveform-value">RR: <span class="resp-rate-value clickable-vital" data-vital="respRate" data-patient="${index}"></span> /min</span>
                             </div>
                             <canvas class="waveform-canvas resp-canvas"></canvas>
                         </div>
                         <div class="additional-vitals">
-                            <div class="additional-vital">
+                            <div class="additional-vital clickable-vital" data-vital="temp" data-patient="${index}">
                                 <div class="additional-vital-label">Temperature</div>
                                 <div class="additional-vital-value temp-value">--</div>
                             </div>
-                            <div class="additional-vital">
+                            <div class="additional-vital clickable-vital" data-vital="respRate" data-patient="${index}">
                                 <div class="additional-vital-label">Respiratory Rate</div>
                                 <div class="additional-vital-value resp-value">--</div>
                             </div>
-                            <div class="additional-vital">
+                            <div class="additional-vital clickable-vital" data-vital="rrInterval" data-patient="${index}">
                                 <div class="additional-vital-label">RR Interval</div>
                                 <div class="additional-vital-value rr-value">--</div>
                         </div>
@@ -1601,6 +1890,56 @@
                     });
                 }
                 
+                // Add click handlers to clickable vital values (works in both minimized and expanded views)
+                // Use capture phase to ensure this runs before the expansion handler
+                module.addEventListener('click', (e) => {
+                    // Don't trigger on minimize button or patient ID clicks
+                    if (e.target.closest('.minimize-button') || e.target.closest('.patient-id')) {
+                        return;
+                    }
+                    
+                    const clickableVital = e.target.closest('.clickable-vital');
+                    if (clickableVital) {
+                        // Only allow chart opening if module is already expanded
+                        if (!patient.expanded) {
+                            return; // Don't do anything if module is not expanded
+                        }
+                        
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const vitalType = clickableVital.getAttribute('data-vital');
+                        const patientIndex = parseInt(clickableVital.getAttribute('data-patient'));
+                        
+                        if (vitalType && patientIndex !== null && !isNaN(patientIndex)) {
+                            // Module is already expanded, show chart immediately
+                            showVitalChart(patientIndex, vitalType);
+                            return false; // Prevent any further event handling
+                        }
+                    }
+                }, true); // Use capture phase
+                
+                // Also attach direct click handlers to all clickable vitals for better reliability
+                // Only allow chart opening when module is expanded
+                const clickableVitals = module.querySelectorAll('.clickable-vital');
+                clickableVitals.forEach(vital => {
+                    vital.addEventListener('click', (e) => {
+                        // Only allow chart opening if module is already expanded
+                        if (!patient.expanded) {
+                            return; // Don't do anything if module is not expanded
+                        }
+                        
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const vitalType = vital.getAttribute('data-vital');
+                        const patientIndex = parseInt(vital.getAttribute('data-patient'));
+                        
+                        if (vitalType && patientIndex !== null && !isNaN(patientIndex)) {
+                            // Module is already expanded, show chart immediately
+                            showVitalChart(patientIndex, vitalType);
+                        }
+                    });
+                });
+                
                 // Get minimize button reference
                 const minimizeButton = module.querySelector('.minimize-button');
                 
@@ -1633,18 +1972,25 @@
                 
                 // Add click handler for expand/collapse
                 module.addEventListener('click', (e) => {
-                    // Don't do anything if clicking on minimize button or expanded content
-                    if (e.target === minimizeButton || e.target.closest('.minimize-button') || e.target.closest('.expanded-content')) {
+                    // Don't do anything if clicking on minimize button, expanded content, or clickable vitals
+                    if (e.target === minimizeButton || e.target.closest('.minimize-button') || e.target.closest('.expanded-content') || e.target.closest('.clickable-vital')) {
                         return;
                     }
                     
                     // If module is already expanded, don't do anything (only minimize button or backdrop can close it)
+                    // But allow clicks on clickable vitals to work
                     if (patient.expanded) {
+                        // Check if this is a clickable vital click (should have been handled by capture phase handler)
+                        if (e.target.closest('.clickable-vital')) {
+                            return;
+                        }
                         return;
                     }
                     
-                    // Only expand when clicking on header or vitals grid (and module is not expanded)
-                    if (e.target.closest('.module-header') || e.target.closest('.vitals-grid')) {
+                    // Only expand when clicking on header or vitals grid (but not on clickable vitals themselves)
+                    const clickedVitalsGrid = e.target.closest('.vitals-grid');
+                    const clickedHeader = e.target.closest('.module-header');
+                    if ((clickedHeader || clickedVitalsGrid) && !e.target.closest('.clickable-vital')) {
                         const overlayBackdrop = document.getElementById('overlay-backdrop');
                         // Close all other expanded modules (instant, no animation)
                         patientData.forEach((p, idx) => {
@@ -1842,6 +2188,11 @@
                 if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
                 if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
             }
+            
+            // Store history for additional vitals
+            storeHistory(patientIndex, 'temp', patient.currentValues.temp);
+            storeHistory(patientIndex, 'respRate', patient.currentValues.respRate);
+            storeHistory(patientIndex, 'rrInterval', patient.currentValues.rrInterval);
         }
         
         // Update waveforms continuously for expanded modules
@@ -1886,6 +2237,36 @@
             });
         }
 
+        // Store historical data for charts
+        function storeHistory(patientIndex, vitalType, value) {
+            const patient = patientData[patientIndex];
+            const now = Date.now();
+            
+            // Handle BP separately (store both systolic and diastolic)
+            if (vitalType === 'bp') {
+                patient.history.bpSystolic.push(patient.currentValues.bpSystolic);
+                patient.history.bpDiastolic.push(patient.currentValues.bpDiastolic);
+            } else {
+                const historyKey = vitalType === 'rrInterval' ? 'rrInterval' : vitalType;
+                if (patient.history[historyKey] !== undefined) {
+                    patient.history[historyKey].push(value);
+                }
+            }
+            
+            patient.historyTimestamps.push(now);
+            
+            // Keep only last 100 data points
+            const maxHistory = 100;
+            if (patient.historyTimestamps.length > maxHistory) {
+                patient.historyTimestamps.shift();
+                Object.keys(patient.history).forEach(key => {
+                    if (patient.history[key].length > maxHistory) {
+                        patient.history[key].shift();
+                    }
+                });
+            }
+        }
+
         // Update individual vital sign
         function updateVital(patientIndex, vitalType) {
             const patient = patientData[patientIndex];
@@ -1923,6 +2304,7 @@
                 elements.hr.status.textContent = hrStatus.toUpperCase();
                 elements.hr.status.className = `vital-status status-${hrStatus}`;
                 elements.hr.element.className = `vital hr ${hrStatus}`;
+                storeHistory(patientIndex, 'hr', patient.currentValues.hr);
             } else if (vitalType === 'spo2') {
                 patient.currentValues.spo2 = generateNewValue(
                     patient.currentValues.spo2,
@@ -1936,6 +2318,7 @@
                 elements.spo2.status.textContent = spo2Status.toUpperCase();
                 elements.spo2.status.className = `vital-status status-${spo2Status}`;
                 elements.spo2.element.className = `vital spo2 ${spo2Status}`;
+                storeHistory(patientIndex, 'spo2', patient.currentValues.spo2);
             } else if (vitalType === 'bp') {
                 patient.currentValues.bpSystolic = generateNewValue(
                     patient.currentValues.bpSystolic,
@@ -1960,6 +2343,7 @@
                 elements.bp.status.textContent = bpStatus.toUpperCase();
                 elements.bp.status.className = `vital-status status-${bpStatus}`;
                 elements.bp.element.className = `vital bp ${bpStatus}`;
+                storeHistory(patientIndex, 'bp', null);
             } else if (vitalType === 'etco2') {
                 patient.currentValues.etco2 = generateNewValue(
                     patient.currentValues.etco2,
@@ -1973,6 +2357,7 @@
                 elements.etco2.status.textContent = etco2Status.toUpperCase();
                 elements.etco2.status.className = `vital-status status-${etco2Status}`;
                 elements.etco2.element.className = `vital etco2 ${etco2Status}`;
+                storeHistory(patientIndex, 'etco2', patient.currentValues.etco2);
             }
         }
 
@@ -1994,8 +2379,327 @@
             const timeStr = timestamp.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateStr = timestamp.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
             document.getElementById('timestamp').textContent = `${dateStr} ${timeStr}`;
+            
+            // Update chart if it's open
+            updateChartIfOpen();
         }
 
+        // Show vital chart modal
+        function showVitalChart(patientIndex, vitalType) {
+            const patient = patientData[patientIndex];
+            const modal = document.getElementById('vital-chart-modal');
+            const canvas = document.getElementById('vital-chart-canvas');
+            const title = document.getElementById('vital-chart-title');
+            
+            // Get vital name
+            const vitalNames = {
+                hr: 'Heart Rate',
+                spo2: 'SpO₂',
+                bp: 'Blood Pressure',
+                etco2: 'EtCO₂',
+                temp: 'Temperature',
+                respRate: 'Respiratory Rate',
+                rrInterval: 'RR Interval'
+            };
+            
+            title.textContent = `${patient.patientName} - ${vitalNames[vitalType]} Trend`;
+            
+            // Store state for redraw (use the passed patientIndex directly)
+            currentChartState = { patient, patientIndex, vitalType };
+            
+            // Show modal first so canvas has dimensions
+            modal.classList.add('active');
+            
+            // Wait a frame for layout, then draw chart
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    drawVitalChart(canvas, patient, vitalType);
+                }, 50);
+            });
+        }
+        
+        // Draw vital chart on canvas
+        function drawVitalChart(canvas, patient, vitalType) {
+            if (!canvas) {
+                console.error('Canvas element not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error('Could not get canvas context');
+                return;
+            }
+            
+            // Get actual canvas container width
+            // Try to get width from parent, or use a default
+            let containerWidth = 800;
+            if (canvas.parentElement && canvas.parentElement.offsetWidth > 0) {
+                containerWidth = canvas.parentElement.offsetWidth - 48; // Account for padding
+            } else if (canvas.offsetWidth > 0) {
+                containerWidth = canvas.offsetWidth;
+            }
+            
+            const width = canvas.width = Math.max(containerWidth, 400);
+            const height = canvas.height = 300;
+            
+            // Clear canvas with background color
+            ctx.fillStyle = '#161b22';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Get vital name and unit
+            const vitalNames = {
+                hr: 'Heart Rate',
+                spo2: 'SpO₂',
+                bp: 'Blood Pressure',
+                etco2: 'EtCO₂',
+                temp: 'Temperature',
+                respRate: 'Respiratory Rate',
+                rrInterval: 'RR Interval'
+            };
+            
+            const units = {
+                hr: 'bpm',
+                spo2: '%',
+                bp: 'mmHg',
+                etco2: 'mmHg',
+                temp: '°C',
+                respRate: '/min',
+                rrInterval: 'ms'
+            };
+            
+            // Get data
+            let data = [];
+            let timestamps = [];
+            
+            if (vitalType === 'bp') {
+                // For BP, we'll show both systolic and diastolic
+                data = {
+                    systolic: patient.history.bpSystolic,
+                    diastolic: patient.history.bpDiastolic
+                };
+                timestamps = patient.historyTimestamps;
+            } else {
+                const historyKey = vitalType === 'rrInterval' ? 'rrInterval' : vitalType;
+                data = patient.history[historyKey] || [];
+                timestamps = patient.historyTimestamps;
+            }
+            
+            // Check if we have data
+            const hasData = vitalType === 'bp' 
+                ? (data.systolic && data.systolic.length > 0)
+                : (data && Array.isArray(data) && data.length > 0);
+            
+            if (!hasData) {
+                ctx.fillStyle = '#6e7681';
+                ctx.font = '14px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Collecting data...', width / 2, height / 2);
+                return;
+            }
+            
+            // Padding - increased to prevent label overlap
+            const padding = { top: 20, right: 30, bottom: 50, left: 70 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            // Calculate min/max for scaling
+            let min, max;
+            if (vitalType === 'bp') {
+                const allValues = [...data.systolic, ...data.diastolic];
+                if (allValues.length === 0) {
+                    ctx.fillStyle = '#6e7681';
+                    ctx.font = '14px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Collecting data...', width / 2, height / 2);
+                    return;
+                }
+                min = Math.min(...allValues) - 10;
+                max = Math.max(...allValues) + 10;
+            } else {
+                if (data.length === 0) {
+                    ctx.fillStyle = '#6e7681';
+                    ctx.font = '14px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Collecting data...', width / 2, height / 2);
+                    return;
+                }
+                min = Math.min(...data) * 0.95;
+                max = Math.max(...data) * 1.05;
+                // Ensure range is not zero
+                if (min === max) {
+                    min = min - Math.abs(min * 0.1);
+                    max = max + Math.abs(max * 0.1);
+                }
+            }
+            
+            const range = max - min;
+            if (range === 0) {
+                ctx.fillStyle = '#6e7681';
+                ctx.font = '14px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Insufficient data variation', width / 2, height / 2);
+                return;
+            }
+            
+            // Draw grid
+            ctx.strokeStyle = '#21262d';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = padding.top + (chartHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+            }
+            
+            // Draw axes
+            ctx.strokeStyle = '#30363d';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, padding.top);
+            ctx.lineTo(padding.left, height - padding.bottom);
+            ctx.lineTo(width - padding.right, height - padding.bottom);
+            ctx.stroke();
+            
+            // Draw Y-axis value labels
+            ctx.fillStyle = '#6e7681';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const value = max - (range / 5) * i;
+                const y = padding.top + (chartHeight / 5) * i;
+                ctx.fillText(value.toFixed(1), padding.left - 15, y + 4);
+            }
+            
+            // Y-axis label (rotated text on the left)
+            ctx.save();
+            ctx.translate(25, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText(`${vitalNames[vitalType]} (${units[vitalType]})`, 0, 0);
+            ctx.restore();
+            
+            // Draw data
+            if (vitalType === 'bp') {
+                // Draw systolic
+                ctx.strokeStyle = '#f85149';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < data.systolic.length; i++) {
+                    const x = padding.left + (chartWidth / (data.systolic.length - 1)) * i;
+                    const y = padding.top + chartHeight - ((data.systolic[i] - min) / range) * chartHeight;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                
+                // Draw diastolic
+                ctx.strokeStyle = '#58a6ff';
+                ctx.beginPath();
+                for (let i = 0; i < data.diastolic.length; i++) {
+                    const x = padding.left + (chartWidth / (data.diastolic.length - 1)) * i;
+                    const y = padding.top + chartHeight - ((data.diastolic[i] - min) / range) * chartHeight;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            } else {
+                ctx.strokeStyle = '#58a6ff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < data.length; i++) {
+                    const x = padding.left + (chartWidth / (data.length - 1)) * i;
+                    const y = padding.top + chartHeight - ((data[i] - min) / range) * chartHeight;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+            
+            // Draw time labels (X-axis) - aligned with case start time
+            ctx.fillStyle = '#6e7681';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            
+            // Use patient's case start time and current time
+            const caseStartTime = patient.startTime;
+            const currentTime = new Date();
+            
+            // Format start time
+            const startTimeStr = caseStartTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            const currentTimeStr = currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            
+            // Draw start time at left edge
+            ctx.fillText(startTimeStr, padding.left, height - 15);
+            
+            // Draw current time at right edge
+            ctx.fillText(currentTimeStr, width - padding.right, height - 15);
+            
+            // Optionally draw a middle time label if there's enough space
+            if (chartWidth > 400) {
+                const midTime = new Date(caseStartTime.getTime() + (currentTime.getTime() - caseStartTime.getTime()) / 2);
+                const midTimeStr = midTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+                ctx.fillText(midTimeStr, padding.left + chartWidth / 2, height - 15);
+            }
+        }
+        
+        // Store current chart state for redraw on resize and updates
+        let currentChartState = null;
+        
+        // Function to update chart if it's currently open
+        function updateChartIfOpen() {
+            try {
+                if (currentChartState && currentChartState.patientIndex !== undefined && currentChartState.patientIndex !== null) {
+                    const chartModal = document.getElementById('vital-chart-modal');
+                    if (chartModal && chartModal.classList.contains('active')) {
+                        const canvas = document.getElementById('vital-chart-canvas');
+                        // Get fresh patient data using stored index
+                        if (currentChartState.patientIndex >= 0 && patientData && patientData[currentChartState.patientIndex]) {
+                            const currentPatient = patientData[currentChartState.patientIndex];
+                            if (currentPatient && canvas) {
+                                drawVitalChart(canvas, currentPatient, currentChartState.vitalType);
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                // Silently fail - don't break the dashboard if chart update fails
+                console.error('Error updating chart:', e);
+            }
+        }
+        
+        // Close chart modal
+        const closeChartButton = document.getElementById('close-chart-button');
+        const chartModal = document.getElementById('vital-chart-modal');
+        if (closeChartButton) {
+            closeChartButton.addEventListener('click', () => {
+                chartModal.classList.remove('active');
+                currentChartState = null;
+            });
+        }
+        if (chartModal) {
+            chartModal.addEventListener('click', (e) => {
+                if (e.target === chartModal) {
+                    chartModal.classList.remove('active');
+                    currentChartState = null;
+                }
+            });
+        }
+        
+        // Redraw chart on window resize
+        window.addEventListener('resize', () => {
+            if (currentChartState && chartModal && chartModal.classList.contains('active')) {
+                const canvas = document.getElementById('vital-chart-canvas');
+                if (currentChartState.patientIndex !== undefined && currentChartState.patientIndex !== -1) {
+                    const currentPatient = patientData[currentChartState.patientIndex];
+                    requestAnimationFrame(() => {
+                        drawVitalChart(canvas, currentPatient, currentChartState.vitalType);
+                    });
+                }
+            }
+        });
+        
         // Close on backdrop click (single handler for all modules - instant, no animation)
         const overlayBackdrop = document.getElementById('overlay-backdrop');
         overlayBackdrop.addEventListener('click', () => {
@@ -2213,3 +2917,5 @@
     </script>
 </body>
 </html>
+
+
