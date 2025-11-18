@@ -8,6 +8,44 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Dark mode colors (default) */
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-card: #0d1117;
+            --border-color: #30363d;
+            --border-light: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --status-normal: #3fb950;
+            --status-warning: #d29922;
+            --status-critical: #f85149;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --waveform-bg: #161b22;
+        }
+
+        body.light-mode {
+            /* Light mode colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #e1e4e8;
+            --bg-card: #ffffff;
+            --border-color: #d1d5da;
+            --border-light: #e1e4e8;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --text-muted: #8b949e;
+            --status-normal: #1a7f37;
+            --status-warning: #9a6700;
+            --status-critical: #cf222e;
+            --accent-blue: #0969da;
+            --accent-green: #1a7f37;
+            --waveform-bg: #f6f8fa;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -16,10 +54,11 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0d1117;
-            color: #e6edf3;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             padding: 20px;
             overflow-x: auto;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .header {
@@ -28,10 +67,11 @@
             align-items: flex-start;
             margin-bottom: 30px;
             padding: 20px 28px;
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .header-left {
@@ -52,7 +92,7 @@
             font-size: 1.8em;
             font-weight: 400;
             margin: 0;
-            color: #e6edf3;
+            color: var(--text-primary);
             letter-spacing: 0.5px;
             font-family: 'Courier New', Courier, 'Lucida Console', Monaco, 'Consolas', monospace;
             font-variant-numeric: tabular-nums;
@@ -64,7 +104,7 @@
             align-items: flex-end;
             gap: 8px;
             font-size: 0.85em;
-            color: #8b949e;
+            color: var(--text-secondary);
             font-weight: 400;
             font-family: 'Inter', sans-serif;
         }
@@ -74,8 +114,62 @@
             gap: 16px;
             align-items: center;
             font-size: 0.8em;
-            color: #6e7681;
+            color: var(--text-muted);
             font-family: 'Courier New', 'Consolas', monospace;
+        }
+
+        .column-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .column-control-label {
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        .column-control-buttons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .column-control-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 0.85em;
+            font-weight: 600;
+            width: 32px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', 'Consolas', monospace;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            user-select: none;
+        }
+
+        .column-control-btn:hover {
+            background: var(--border-color);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .column-control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .column-control-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
         }
 
         .system-status {
@@ -94,22 +188,23 @@
 
         .timestamp {
             font-size: 0.9em;
-            color: #8b949e;
+            color: var(--text-secondary);
             font-family: 'Courier New', 'Consolas', monospace;
         }
 
         .footer {
             margin-top: 30px;
             padding: 12px 28px;
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.75em;
-            color: #6e7681;
+            color: var(--text-muted);
             font-family: 'Courier New', 'Consolas', monospace;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
 
         .footer-left {
@@ -120,6 +215,55 @@
         .footer-right {
             display: flex;
             gap: 20px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .theme-toggle input[type="checkbox"] {
+            display: none;
+        }
+
+        .theme-toggle-slider {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--border-color);
+            border-radius: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle input[type="checkbox"]:checked + .theme-toggle-slider {
+            background: var(--accent-blue);
+        }
+
+        .theme-toggle input[type="checkbox"]:checked + .theme-toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        .theme-toggle-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
         }
 
         .dashboard {
@@ -131,18 +275,19 @@
         }
 
         .patient-module {
-            background: #161b22;
+            background: var(--bg-secondary);
             border-radius: 6px;
             padding: 16px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-            border: 1px solid #30363d;
+            border: 1px solid var(--border-color);
             overflow: hidden;
             cursor: pointer;
             position: relative;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .patient-module:hover {
-            border-color: #58a6ff;
+            border-color: var(--accent-blue);
             box-shadow: 0 2px 8px rgba(88, 166, 255, 0.15);
         }
 
@@ -153,7 +298,7 @@
         .patient-module.expanded {
             position: fixed !important;
             z-index: 1000;
-            border-color: #58a6ff;
+            border-color: var(--accent-blue);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(88, 166, 255, 0.3);
             overflow-y: auto;
             overflow-x: hidden;
@@ -185,10 +330,10 @@
             right: 12px;
             width: 28px;
             height: 28px;
-            background: #21262d;
-            border: 1px solid #30363d;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
@@ -198,6 +343,7 @@
             font-family: 'Inter', sans-serif;
             line-height: 1;
             padding: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
 
         .patient-module.expanded .minimize-button {
@@ -205,12 +351,55 @@
         }
 
         .minimize-button:hover {
-            background: #30363d;
-            border-color: #58a6ff;
-            color: #58a6ff;
+            background: var(--border-color);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
         }
 
         .expanded-content {
+            display: none;
+        }
+
+        /* Show expanded-content (for waveforms) in minimized view for single and two column layouts */
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content {
+            display: block;
+            margin-top: 15px;
+        }
+
+        /* Show waveforms in minimized view for single and two column layouts */
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content .waveform-container,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content .waveform-container {
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-canvas,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-canvas {
+            height: 60px;
+        }
+
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-header,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-header {
+            font-size: 0.75em;
+            margin-bottom: 6px;
+        }
+
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-label,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-label {
+            font-size: 0.7em;
+        }
+
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-value,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content .waveform-container .waveform-value {
+            font-size: 0.7em;
+        }
+
+        /* Hide other expanded content sections in minimized view */
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content .patient-info-section,
+        .dashboard.single-column .patient-module:not(.expanded) .expanded-content .additional-vitals,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content .patient-info-section,
+        .dashboard.two-column .patient-module:not(.expanded) .expanded-content .additional-vitals {
             display: none;
         }
 
@@ -245,6 +434,7 @@
             margin-bottom: 20px;
         }
 
+
         .waveform-header {
             display: flex;
             justify-content: space-between;
@@ -263,7 +453,7 @@
 
         .waveform-value {
             font-size: 0.9em;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-family: 'Courier New', 'Consolas', monospace;
             font-weight: 600;
         }
@@ -271,18 +461,20 @@
         .waveform-canvas {
             width: 100%;
             height: 80px;
-            background: #0d1117;
-            border: 1px solid #21262d;
+            background: var(--waveform-bg);
+            border: 1px solid var(--border-light);
             border-radius: 4px;
             display: block;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .patient-info-section {
-            background: #0d1117;
+            background: var(--bg-card);
             padding: 12px;
             border-radius: 4px;
-            border: 1px solid #21262d;
+            border: 1px solid var(--border-light);
             margin-bottom: 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .patient-info-grid {
@@ -299,7 +491,7 @@
         }
 
         .info-label {
-            color: #6e7681;
+            color: var(--text-muted);
             font-size: 0.85em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -307,7 +499,7 @@
         }
 
         .info-value {
-            color: #e6edf3;
+            color: var(--text-primary);
             font-family: 'Courier New', 'Consolas', monospace;
             font-weight: 500;
         }
@@ -320,15 +512,16 @@
         }
 
         .additional-vital {
-            background: #0d1117;
+            background: var(--bg-card);
             padding: 10px;
             border-radius: 4px;
-            border: 1px solid #21262d;
+            border: 1px solid var(--border-light);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .additional-vital-label {
             font-size: 0.65em;
-            color: #8b949e;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 6px;
@@ -337,7 +530,7 @@
 
         .additional-vital-value {
             font-size: 1.2em;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-family: 'Courier New', 'Consolas', monospace;
             font-weight: 600;
         }
@@ -348,7 +541,7 @@
             align-items: flex-start;
             margin-bottom: 14px;
             padding-bottom: 12px;
-            border-bottom: 1px solid #21262d;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .patient-module.expanded .module-header {
@@ -389,19 +582,19 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            border: 1.5px solid #3fb950;
+            border: 1.5px solid var(--status-normal);
+            box-sizing: border-box;
             animation: dataPulseRing 2s infinite;
+            will-change: transform, opacity;
         }
 
         @keyframes dataPulseRing {
             0% {
-                width: 8px;
-                height: 8px;
+                transform: translate(-50%, -50%) scale(1);
                 opacity: 1;
             }
             100% {
-                width: 16px;
-                height: 16px;
+                transform: translate(-50%, -50%) scale(2);
                 opacity: 0;
             }
         }
@@ -409,13 +602,13 @@
         .patient-name-display {
             font-size: 0.75em;
             font-weight: 400;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
         }
 
         .procedure-info {
             font-size: 0.7em;
-            color: #6e7681;
+            color: var(--text-muted);
             font-family: 'Inter', sans-serif;
             font-weight: 400;
         }
@@ -450,6 +643,10 @@
             overflow-y: auto;
         }
 
+        body.light-mode .patient-file-modal {
+            background: rgba(0, 0, 0, 0.6);
+        }
+
         .patient-file-modal.active {
             display: flex;
             align-items: center;
@@ -458,8 +655,8 @@
         }
 
         .patient-file-content {
-            background: #0d1117;
-            border: 1px solid #30363d;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             width: 90%;
             max-width: 1000px;
@@ -467,6 +664,7 @@
             overflow-y: auto;
             padding: 24px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .patient-file-header {
@@ -475,13 +673,13 @@
             align-items: center;
             margin-bottom: 24px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #21262d;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .patient-file-title {
             font-size: 1.8em;
             font-weight: 600;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             margin-bottom: 4px;
         }
@@ -489,15 +687,15 @@
         .patient-file-subtitle {
             font-size: 1.2em;
             font-weight: 400;
-            color: #8b949e;
+            color: var(--text-secondary);
             font-family: 'Inter', sans-serif;
         }
 
         .close-file-button {
-            background: #21262d;
-            border: 1px solid #30363d;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-size: 18px;
             width: 32px;
             height: 32px;
@@ -506,10 +704,11 @@
             align-items: center;
             justify-content: center;
             font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
 
         .close-file-button:hover {
-            background: #30363d;
+            background: var(--border-color);
         }
 
         .patient-file-section {
@@ -519,7 +718,7 @@
         .file-section-title {
             font-size: 1.1em;
             font-weight: 600;
-            color: #58a6ff;
+            color: var(--accent-blue);
             margin-bottom: 12px;
             font-family: 'Inter', sans-serif;
             text-transform: uppercase;
@@ -541,7 +740,7 @@
 
         .file-info-label {
             font-size: 0.75em;
-            color: #6e7681;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-family: 'Inter', sans-serif;
@@ -549,22 +748,23 @@
 
         .file-info-value {
             font-size: 0.9em;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-family: 'Courier New', 'Consolas', monospace;
         }
 
         .file-notes {
-            background: #161b22;
-            border: 1px solid #21262d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
             border-radius: 4px;
             padding: 12px;
             margin-top: 8px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .file-note {
             margin-bottom: 12px;
             padding-bottom: 12px;
-            border-bottom: 1px solid #21262d;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .file-note:last-child {
@@ -581,20 +781,20 @@
 
         .file-note-author {
             font-size: 0.85em;
-            color: #58a6ff;
+            color: var(--accent-blue);
             font-family: 'Inter', sans-serif;
             font-weight: 500;
         }
 
         .file-note-date {
             font-size: 0.75em;
-            color: #6e7681;
+            color: var(--text-muted);
             font-family: 'Courier New', 'Consolas', monospace;
         }
 
         .file-note-text {
             font-size: 0.9em;
-            color: #e6edf3;
+            color: var(--text-primary);
             line-height: 1.6;
             font-family: 'Inter', sans-serif;
         }
@@ -619,13 +819,14 @@
         }
 
         .vital-chart-content {
-            background: #0d1117;
-            border: 1px solid #30363d;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             width: 90%;
             max-width: 800px;
             padding: 24px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .vital-chart-header {
@@ -634,21 +835,22 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #21262d;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .vital-chart-title {
             font-size: 1.3em;
             font-weight: 600;
-            color: #e6edf3;
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
         }
 
         .vital-chart-canvas {
             width: 100%;
             height: 300px;
-            background: #161b22;
-            border: 1px solid #21262d;
+            background: var(--waveform-bg);
+            border: 1px solid var(--border-light);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
             border-radius: 4px;
             margin-top: 16px;
         }
@@ -689,7 +891,7 @@
             align-items: center;
             gap: 3px;
             font-size: 0.65em;
-            color: #6e7681;
+            color: var(--text-muted);
             font-family: 'Courier New', 'Consolas', monospace;
             margin-left: auto;
         }
@@ -701,16 +903,16 @@
         }
 
         .vital {
-            background: #0d1117;
+            background: var(--bg-card);
             padding: 12px;
             border-radius: 4px;
             border-left: 3px solid;
             transition: all 0.2s ease;
             overflow: hidden;
             word-wrap: break-word;
-            border-top: 1px solid #21262d;
-            border-right: 1px solid #21262d;
-            border-bottom: 1px solid #21262d;
+            border-top: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
         }
         
         /* Show pointer cursor for all clickable vitals */
@@ -720,16 +922,16 @@
         }
 
         .vital.normal {
-            border-left-color: #3fb950;
+            border-left-color: var(--status-normal);
         }
 
         .vital.warning {
-            border-left-color: #d29922;
+            border-left-color: var(--status-warning);
             animation: pulse 2s infinite;
         }
 
         .vital.critical {
-            border-left-color: #f85149;
+            border-left-color: var(--status-critical);
             animation: criticalPulse 0.8s infinite;
         }
 
@@ -774,7 +976,7 @@
 
         .vital-unit {
             font-size: 0.65em;
-            color: #8b949e;
+            color: var(--text-secondary);
             margin-left: 4px;
             font-weight: 400;
             font-family: 'Inter', sans-serif;
@@ -901,8 +1103,12 @@
             }
 
             .dashboard {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr) !important;
                 gap: 10px;
+            }
+            
+            .column-control {
+                display: none;
             }
 
             .footer {
@@ -1086,6 +1292,16 @@
                 <span>OR COUNT: <span id="or-count">12</span></span>
                 <span>|</span>
                 <span>NET: CONNECTED</span>
+                <span>|</span>
+                <div class="column-control">
+                    <span class="column-control-label">COLS:</span>
+                    <div class="column-control-buttons">
+                        <button class="column-control-btn" data-cols="1">1</button>
+                        <button class="column-control-btn" data-cols="2">2</button>
+                        <button class="column-control-btn active" data-cols="3">3</button>
+                        <button class="column-control-btn" data-cols="4">4</button>
+                    </div>
+                </div>
             </div>
         <div class="timestamp" id="timestamp"></div>
         </div>
@@ -1118,6 +1334,12 @@
             <span>© 2024 Dignity Health St. Joseph's Hospital and Medical Center</span>
             <span>|</span>
             <span>FDA 510(k) K123456</span>
+            <span>|</span>
+            <label class="theme-toggle">
+                <input type="checkbox" id="theme-toggle-checkbox">
+                <span class="theme-toggle-slider"></span>
+                <span class="theme-toggle-label">Light Mode</span>
+            </label>
         </div>
     </div>
 
@@ -1155,8 +1377,8 @@
         // Procedure types for realistic hospital context
         const procedureTypes = [
             'Anterior Cruciate Ligament Reconstruction', 'Lumbar Laminectomy with Discectomy', 'Cataract Extraction',
-            'Laparoscopic Appendectomy', 'Hernia Repair', 'Bilateral Augmentation Mammoplasty', 'Hip Replacement',
-            'Colonoscopy', 'Gastric Bypass', 'Spinal Fusion', 'Cardiac Bypass', 'Craniotomy'
+            'Laparoscopic Appendectomy', 'Hernia Repair', 'Spinal Fracture Repair', 'Hip Replacement',
+            'Knee Arthroscopy', 'Shoulder Rotator Cuff Repair', 'Spinal Fusion', 'Cardiac Bypass', 'Craniotomy'
         ];
 
         // Surgeon names for realism
@@ -1386,22 +1608,23 @@
             ],
             [
                 { author: 'Dr. RODRIGUEZ', date: '2024-12-10', text: 'Hernia repair scheduled. Patient on CPAP for sleep apnea - ensure available for post-op recovery.' },
-                { author: 'Dr. MARTINEZ', date: '2024-12-14', text: 'Pre-op assessment complete. Continue home medications. BP controlled.' }
+                { author: 'Dr. MARTINEZ', date: '2024-12-14', text: 'Pre-op assessment complete. Continue home medications. BP controlled.' },
+                { author: 'Dr. MARTINEZ', date: '2024-12-13', text: 'Patient reported getting breathless when walking around campus. Advised to monitor symptoms and follow up if worsening. No acute distress noted during exam.' }
             ],
             [
-                { author: 'Dr. WILSON', date: '2024-12-11', text: 'Bilateral augmentation mammoplasty scheduled. Patient healthy, no significant medical history. Standard pre-op workup completed.' },
-                { author: 'Dr. ANDERSON', date: '2024-12-15', text: 'Pre-op labs normal. Patient cleared for procedure. Latex allergy documented.' }
+                { author: 'Dr. WILSON', date: '2024-12-11', text: 'Spinal fracture repair scheduled. Patient sustained L1-L2 vertebral fractures following MVA. CT imaging reviewed. Pre-op workup completed.' },
+                { author: 'Dr. ANDERSON', date: '2024-12-15', text: 'Pre-op labs normal. Patient cleared for procedure. Latex allergy documented. Neurological exam stable.' }
             ],
             [
                 { author: 'Dr. SMITH', date: '2024-12-09', text: 'Hip replacement for advanced osteoarthritis. Patient stable on current medications. Pre-op clearance obtained.' },
                 { author: 'Dr. JOHNSON', date: '2024-12-13', text: 'Pre-op assessment unremarkable. Continue home meds. Patient ready for surgery.' }
             ],
             [
-                { author: 'Dr. WILLIAMS', date: '2024-12-12', text: 'Routine colonoscopy for screening. Patient healthy, no concerns. Standard prep protocol.' },
-                { author: 'Dr. BROWN', date: '2024-12-15', text: 'Pre-op clearance obtained. Patient ready for procedure.' }
+                { author: 'Dr. WILLIAMS', date: '2024-12-12', text: 'Knee arthroscopy for meniscal tear. Patient reports knee pain and limited range of motion. MRI confirms meniscal injury. Pre-op clearance obtained.' },
+                { author: 'Dr. BROWN', date: '2024-12-15', text: 'Pre-op assessment complete. Patient ready for procedure. Continue home medications.' }
             ],
             [
-                { author: 'Dr. JONES', date: '2024-12-10', text: 'Gastric bypass for morbid obesity. Extensive pre-op workup completed. Patient counseled on risks and benefits.' },
+                { author: 'Dr. JONES', date: '2024-12-10', text: 'Shoulder rotator cuff repair scheduled. Patient reports chronic shoulder pain and weakness. MRI confirms rotator cuff tear. Pre-op workup completed.' },
                 { author: 'Dr. GARCIA', date: '2024-12-14', text: 'Pre-op labs reviewed. Continue home medications. Patient stable for procedure.' }
             ],
             [
@@ -1972,8 +2195,8 @@
                 
                 // Add click handler for expand/collapse
                 module.addEventListener('click', (e) => {
-                    // Don't do anything if clicking on minimize button, expanded content, or clickable vitals
-                    if (e.target === minimizeButton || e.target.closest('.minimize-button') || e.target.closest('.expanded-content') || e.target.closest('.clickable-vital')) {
+                    // Don't do anything if clicking on minimize button, patient ID, or expanded content
+                    if (e.target === minimizeButton || e.target.closest('.minimize-button') || e.target.closest('.patient-id') || e.target.closest('.expanded-content')) {
                         return;
                     }
                     
@@ -1987,60 +2210,57 @@
                         return;
                     }
                     
-                    // Only expand when clicking on header or vitals grid (but not on clickable vitals themselves)
-                    const clickedVitalsGrid = e.target.closest('.vitals-grid');
-                    const clickedHeader = e.target.closest('.module-header');
-                    if ((clickedHeader || clickedVitalsGrid) && !e.target.closest('.clickable-vital')) {
-                        const overlayBackdrop = document.getElementById('overlay-backdrop');
-                        // Close all other expanded modules (instant, no animation)
-                        patientData.forEach((p, idx) => {
-                            if (p.expanded && idx !== index) {
-                                const otherModule = patientElements[idx].module;
-                                
-                                // Instantly collapse - no animation
-                                p.expanded = false;
-                                otherModule.classList.remove('expanded');
-                                overlayBackdrop.classList.remove('active');
-                                
-                                // Reset styles immediately
-                                otherModule.style.position = '';
-                                otherModule.style.left = '';
-                                otherModule.style.top = '';
-                                otherModule.style.transform = '';
-                                otherModule.style.width = '';
-                                otherModule.style.maxWidth = '';
-                                p.originalPosition = null;
-                            }
-                        });
-                        
-                        // Store original position and size
-                            const rect = module.getBoundingClientRect();
-                            const originalX = rect.left + rect.width / 2;
-                            const originalY = rect.top + rect.height / 2;
-                            const originalWidth = rect.width;
+                    // In minimized view, clicking anywhere on the module (except patient ID) should expand it
+                    // This includes clicking on waveforms, vitals, header, or any empty space
+                    const overlayBackdrop = document.getElementById('overlay-backdrop');
+                    // Close all other expanded modules (instant, no animation)
+                    patientData.forEach((p, idx) => {
+                        if (p.expanded && idx !== index) {
+                            const otherModule = patientElements[idx].module;
                             
-                            // Store original position
-                            patient.originalPosition = { originalX, originalY, originalWidth };
+                            // Instantly collapse - no animation
+                            p.expanded = false;
+                            otherModule.classList.remove('expanded');
+                            overlayBackdrop.classList.remove('active');
                             
-                            // Set position and size instantly
-                            module.style.position = 'fixed';
-                            const centerX = window.innerWidth / 2;
-                            const centerY = window.innerHeight / 2;
-                            module.style.left = centerX + 'px';
-                            module.style.top = centerY + 'px';
-                            module.style.transform = 'translate(-50%, -50%)';
-                            module.style.width = '90%';
-                            module.style.maxWidth = '1200px';
-                            module.style.maxHeight = '90vh';
-                            module.style.overflowY = 'auto';
-                            
-                        // Add expanded class
-                        patient.expanded = true;
-                        module.classList.add('expanded');
-                        overlayBackdrop.classList.add('active');
-                        
-                        initializeWaveforms(index);
-                    }
+                            // Reset styles immediately
+                            otherModule.style.position = '';
+                            otherModule.style.left = '';
+                            otherModule.style.top = '';
+                            otherModule.style.transform = '';
+                            otherModule.style.width = '';
+                            otherModule.style.maxWidth = '';
+                            p.originalPosition = null;
+                        }
+                    });
+                    
+                    // Store original position and size
+                    const rect = module.getBoundingClientRect();
+                    const originalX = rect.left + rect.width / 2;
+                    const originalY = rect.top + rect.height / 2;
+                    const originalWidth = rect.width;
+                    
+                    // Store original position
+                    patient.originalPosition = { originalX, originalY, originalWidth };
+                    
+                    // Set position and size instantly
+                    module.style.position = 'fixed';
+                    const centerX = window.innerWidth / 2;
+                    const centerY = window.innerHeight / 2;
+                    module.style.left = centerX + 'px';
+                    module.style.top = centerY + 'px';
+                    module.style.transform = 'translate(-50%, -50%)';
+                    module.style.width = '90%';
+                    module.style.maxWidth = '1200px';
+                    module.style.maxHeight = '90vh';
+                    module.style.overflowY = 'auto';
+                    
+                    // Add expanded class
+                    patient.expanded = true;
+                    module.classList.add('expanded');
+                    overlayBackdrop.classList.add('active');
+                    
+                    initializeWaveforms(index);
                 });
             });
         }
@@ -2114,37 +2334,45 @@
             ctx.stroke();
         }
         
-        // Initialize waveforms display when module is expanded
+        // Initialize waveforms display when module is expanded or in single/two column view
         // Since waveform data is continuously updated for all patients,
         // we just need to draw the current state
         function initializeWaveforms(patientIndex) {
             const patient = patientData[patientIndex];
             const elements = patientElements[patientIndex];
+            const dashboard = document.getElementById('dashboard');
+            const isSingleColumn = dashboard && dashboard.classList.contains('single-column');
+            const isTwoColumn = dashboard && dashboard.classList.contains('two-column');
+            const showWaveforms = patient.expanded || isSingleColumn || isTwoColumn;
             
-            if (!patient.expanded) return;
-            
-            // Draw current waveform data (which is already being continuously updated)
-            drawWaveform(elements.ecgCanvas, patient.ecgData, '#58a6ff', 0.5);
-            drawWaveform(elements.respCanvas, patient.respData, '#3fb950', 0.5);
-            
-            // Update additional vital values
-            if (elements.ecgHrValue) elements.ecgHrValue.textContent = patient.currentValues.hr;
-            if (elements.ecgRrValue) elements.ecgRrValue.textContent = Math.round(patient.currentValues.rrInterval);
-            if (elements.respRateValue) elements.respRateValue.textContent = Math.round(patient.currentValues.respRate);
-            if (elements.tempValue) elements.tempValue.textContent = patient.currentValues.temp.toFixed(1) + '°C';
-            if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
-            if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
-            
-            // Update case duration
-            if (elements.caseDurationValue) {
-                const duration = Math.floor((Date.now() - patient.startTime.getTime()) / 1000);
-                const hours = Math.floor(duration / 3600);
-                const minutes = Math.floor((duration % 3600) / 60);
-                const seconds = duration % 60;
-                if (hours > 0) {
-                    elements.caseDurationValue.textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                } else {
-                    elements.caseDurationValue.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+            if (showWaveforms && elements.ecgCanvas && elements.respCanvas) {
+                // Draw current waveform data (which is already being continuously updated)
+                drawWaveform(elements.ecgCanvas, patient.ecgData, '#58a6ff', 0.5);
+                drawWaveform(elements.respCanvas, patient.respData, '#3fb950', 0.5);
+                
+                // Update waveform values
+                if (elements.ecgHrValue) elements.ecgHrValue.textContent = patient.currentValues.hr;
+                if (elements.ecgRrValue) elements.ecgRrValue.textContent = Math.round(patient.currentValues.rrInterval);
+                if (elements.respRateValue) elements.respRateValue.textContent = Math.round(patient.currentValues.respRate);
+                
+                // Only update additional values if expanded
+                if (patient.expanded) {
+                    if (elements.tempValue) elements.tempValue.textContent = patient.currentValues.temp.toFixed(1) + '°C';
+                    if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
+                    if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
+                    
+                    // Update case duration
+                    if (elements.caseDurationValue) {
+                        const duration = Math.floor((Date.now() - patient.startTime.getTime()) / 1000);
+                        const hours = Math.floor(duration / 3600);
+                        const minutes = Math.floor((duration % 3600) / 60);
+                        const seconds = duration % 60;
+                        if (hours > 0) {
+                            elements.caseDurationValue.textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                        } else {
+                            elements.caseDurationValue.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                        }
+                    }
                 }
             }
         }
@@ -2207,9 +2435,14 @@
                 patient.ecgData.push(generateECGPoint(patient, now));
                 patient.respData.push(generateRespPoint(patient, now));
                 
-                // Only draw waveforms if the module is expanded
-                if (patient.expanded) {
-                    const elements = patientElements[index];
+                const elements = patientElements[index];
+                const dashboard = document.getElementById('dashboard');
+                const isSingleColumn = dashboard && dashboard.classList.contains('single-column');
+                const isTwoColumn = dashboard && dashboard.classList.contains('two-column');
+                const showWaveforms = patient.expanded || isSingleColumn || isTwoColumn;
+                
+                // Draw waveforms if module is expanded OR in single/two column view (using same canvases)
+                if (showWaveforms && elements.ecgCanvas && elements.respCanvas) {
                     drawWaveform(elements.ecgCanvas, patient.ecgData, '#58a6ff', 0.5);
                     drawWaveform(elements.respCanvas, patient.respData, '#3fb950', 0.5);
                     
@@ -2217,20 +2450,24 @@
                     if (elements.ecgHrValue) elements.ecgHrValue.textContent = patient.currentValues.hr;
                     if (elements.ecgRrValue) elements.ecgRrValue.textContent = Math.round(patient.currentValues.rrInterval);
                     if (elements.respRateValue) elements.respRateValue.textContent = Math.round(patient.currentValues.respRate);
-                    if (elements.tempValue) elements.tempValue.textContent = patient.currentValues.temp.toFixed(1) + '°C';
-                    if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
-                    if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
                     
-                    // Update case duration
-                    if (elements.caseDurationValue) {
-                        const duration = Math.floor((Date.now() - patient.startTime.getTime()) / 1000);
-                        const hours = Math.floor(duration / 3600);
-                        const minutes = Math.floor((duration % 3600) / 60);
-                        const seconds = duration % 60;
-                        if (hours > 0) {
-                            elements.caseDurationValue.textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                        } else {
-                            elements.caseDurationValue.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                    // Only update additional values if expanded
+                    if (patient.expanded) {
+                        if (elements.tempValue) elements.tempValue.textContent = patient.currentValues.temp.toFixed(1) + '°C';
+                        if (elements.respValue) elements.respValue.textContent = Math.round(patient.currentValues.respRate) + ' /min';
+                        if (elements.rrValue) elements.rrValue.textContent = Math.round(patient.currentValues.rrInterval) + ' ms';
+                        
+                        // Update case duration
+                        if (elements.caseDurationValue) {
+                            const duration = Math.floor((Date.now() - patient.startTime.getTime()) / 1000);
+                            const hours = Math.floor(duration / 3600);
+                            const minutes = Math.floor((duration % 3600) / 60);
+                            const seconds = duration % 60;
+                            if (hours > 0) {
+                                elements.caseDurationValue.textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                            } else {
+                                elements.caseDurationValue.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                            }
                         }
                     }
                 }
@@ -2725,6 +2962,11 @@
         });
 
         // Show patient file modal
+        // Helper function to get CSS variable value
+        function getCSSVariable(variableName) {
+            return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+        }
+
         function showPatientFile(patientIndex) {
             const patient = patientData[patientIndex];
             const modal = document.getElementById('patient-file-modal');
@@ -2843,7 +3085,7 @@
                                 </div>
                                 <div class="file-note-text">
                                     <strong>Value:</strong> ${lab.value} | <strong>Normal Range:</strong> ${lab.normal} | 
-                                    <span style="color: ${lab.status === 'normal' ? '#3fb950' : lab.status === 'high' || lab.status === 'abnormal' ? '#f85149' : '#d29922'}">
+                                    <span style="color: ${lab.status === 'normal' ? getCSSVariable('--status-normal') : lab.status === 'high' || lab.status === 'abnormal' ? getCSSVariable('--status-critical') : getCSSVariable('--status-warning')}">
                                         ${lab.status.toUpperCase()}
                                     </span>
                                 </div>
@@ -2859,7 +3101,7 @@
                             <div class="file-note">
                                 <div class="file-note-header">
                                     <div class="file-note-author">${med.medication}</div>
-                                    <div class="file-note-date" style="color: ${med.given ? '#3fb950' : '#8b949e'}">
+                                    <div class="file-note-date" style="color: ${med.given ? getCSSVariable('--status-normal') : getCSSVariable('--text-secondary')}">
                                         ${med.time} | ${med.route} | ${med.given ? '✓ GIVEN' : 'PENDING'}
                                     </div>
                                 </div>
@@ -2899,23 +3141,152 @@
             });
         }
 
+        // Column control functionality
+        function initColumnControl() {
+            const dashboard = document.getElementById('dashboard');
+            const columnButtons = document.querySelectorAll('.column-control-btn');
+            
+            if (!dashboard || columnButtons.length === 0) return;
+            
+            // Load saved column preference
+            const savedColumns = localStorage.getItem('dashboardColumns');
+            let currentColumns = savedColumns ? parseInt(savedColumns) : 3;
+            
+            // Apply saved preference (only on desktop)
+            if (window.innerWidth > 768) {
+                dashboard.style.gridTemplateColumns = `repeat(${currentColumns}, 1fr)`;
+                // Add/remove column classes
+                dashboard.classList.remove('single-column', 'two-column');
+                if (currentColumns === 1) {
+                    dashboard.classList.add('single-column');
+                } else if (currentColumns === 2) {
+                    dashboard.classList.add('two-column');
+                }
+                columnButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.dataset.cols) === currentColumns) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            // Add click handlers
+            columnButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const cols = parseInt(this.dataset.cols);
+                    currentColumns = cols;
+                    
+                    // Update active state
+                    columnButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update grid (only on desktop - mobile stays at 2)
+                    if (window.innerWidth > 768 && dashboard) {
+                        dashboard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                        // Add/remove column classes
+                        dashboard.classList.remove('single-column', 'two-column');
+                        if (cols === 1) {
+                            dashboard.classList.add('single-column');
+                        } else if (cols === 2) {
+                            dashboard.classList.add('two-column');
+                        }
+                        localStorage.setItem('dashboardColumns', cols.toString());
+                    }
+                });
+            });
+            
+            // Handle window resize - respect mobile breakpoint
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    if (window.innerWidth <= 768) {
+                        // Mobile: force 2 columns
+                        if (dashboard) {
+                            dashboard.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                            dashboard.classList.remove('single-column', 'two-column');
+                        }
+                    } else {
+                        // Desktop: use saved preference
+                        if (dashboard) {
+                            dashboard.style.gridTemplateColumns = `repeat(${currentColumns}, 1fr)`;
+                            // Add/remove column classes
+                            dashboard.classList.remove('single-column', 'two-column');
+                            if (currentColumns === 1) {
+                                dashboard.classList.add('single-column');
+                            } else if (currentColumns === 2) {
+                                dashboard.classList.add('two-column');
+                            }
+                        }
+                    }
+                }, 100);
+            });
+        }
+
         // Wait for DOM to be ready before initializing
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle-checkbox');
+            if (themeToggle) {
+                // Load saved theme preference
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'light') {
+                    document.body.classList.add('light-mode');
+                    themeToggle.checked = true;
+                }
+                
+                themeToggle.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.body.classList.add('light-mode');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        document.body.classList.remove('light-mode');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                });
+            }
+        }
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
+                initThemeToggle();
+                initColumnControl();
                 initializeDashboard();
                 updateDashboard();
+                // Initialize waveforms for all patients if in single or two column mode
+                setTimeout(() => {
+                    const dashboard = document.getElementById('dashboard');
+                    if (dashboard && (dashboard.classList.contains('single-column') || dashboard.classList.contains('two-column'))) {
+                        patientData.forEach((patient, index) => {
+                            if (!patient.expanded) {
+                                initializeWaveforms(index);
+                            }
+                        });
+                    }
+                }, 200);
                 setInterval(updateDashboard, 500);
                 setInterval(updateWaveforms, 50);
             });
         } else {
             // DOM is already ready
+            initThemeToggle();
+            initColumnControl();
             initializeDashboard();
             updateDashboard();
+            // Initialize waveforms for all patients if in single or two column mode
+            setTimeout(() => {
+                const dashboard = document.getElementById('dashboard');
+                if (dashboard && (dashboard.classList.contains('single-column') || dashboard.classList.contains('two-column'))) {
+                    patientData.forEach((patient, index) => {
+                        if (!patient.expanded) {
+                            initializeWaveforms(index);
+                        }
+                    });
+                }
+            }, 200);
             setInterval(updateDashboard, 500);
             setInterval(updateWaveforms, 50);
         }
     </script>
 </body>
 </html>
-
 
